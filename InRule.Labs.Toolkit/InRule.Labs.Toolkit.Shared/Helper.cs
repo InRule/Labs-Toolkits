@@ -10,18 +10,20 @@ namespace InRule.Labs.Toolkit.Shared
 {
     public class Helper
     {
-        private string _sourceRuleappPath = @"C:\Users\Christopher Berg\Documents\SourceRuleApplication.ruleappx";
-        private string _destRuleappPath = @"C:\Users\Christopher Berg\Documents\DestRuleApplication.ruleappx";
+        private string _sourceRuleappPath;  
+        private string _destinationRuleappPath;   
 
         private RuleApplicationDef _source = null;
         private RuleApplicationDef _dest = null;
 
-        public void RunTest()
+        public void ImportArtifacts(string sourceRuleappPath, string destinationRuleappPath)
         {
             try
             {
+                _sourceRuleappPath = sourceRuleappPath;
+                _destinationRuleappPath = destinationRuleappPath;
                 _source = RuleApplicationDef.Load(_sourceRuleappPath);
-                _dest = RuleApplicationDef.Load(_destRuleappPath);
+                _dest = RuleApplicationDef.Load(_destinationRuleappPath);
            
                 PullEntities();
                 PullRulesets();
@@ -34,7 +36,7 @@ namespace InRule.Labs.Toolkit.Shared
         }
 
 
-        public void PullEntities()
+        private void PullEntities()
         {
 
             for (int i = 0; i < _source.Entities.Count; i++)
@@ -45,7 +47,7 @@ namespace InRule.Labs.Toolkit.Shared
            // _dest.SaveToFile(_destRuleappPath);
             
         }
-        public void PullRulesets()
+        private void PullRulesets()
         {
 
             for (int i = 0; i < _source.RuleSets.Count; i++)
@@ -53,18 +55,9 @@ namespace InRule.Labs.Toolkit.Shared
                 Debug.WriteLine(_source.RuleSets[i].Name);
                 _dest.RuleSets.Add(_source.RuleSets[i].CopyWithSameGuids());
             }
-             _dest.SaveToFile(_destRuleappPath);
+             _dest.SaveToFile(_destinationRuleappPath);
 
         }
 
-        public void PushArtifact()
-        {
-            
-        }
-
-        public void LockArtifact()
-        {
-            
-        }
     }
 }

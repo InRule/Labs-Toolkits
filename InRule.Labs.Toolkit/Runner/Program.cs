@@ -7,7 +7,7 @@ namespace Runner
         static void Main(string[] args)
         {
             var runner = new Helper();
-            runner.RunTest();
+            runner.ImportArtifacts(@"C:\Users\Christopher Berg\Documents\SourceRuleApplication.ruleappx", @"C:\Users\Christopher Berg\Documents\DestRuleApplication.ruleappx");
         }
     }
 }
