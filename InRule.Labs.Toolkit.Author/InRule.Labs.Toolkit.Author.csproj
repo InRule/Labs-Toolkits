@@ -66,11 +66,6 @@
       <DependentUpon>ConfigurationControl.xaml</DependentUpon>
     </Compile>
     <Compile Include="Extension.cs" />
-    <Compile Include="HtmlContentControl.xaml.cs">
-      <DependentUpon>HtmlContentControl.xaml</DependentUpon>
-    </Compile>
-    <Compile Include="HtmlContentProvider.cs" />
-    <Compile Include="HtmlDef.cs" />
     <Compile Include="Properties\AssemblyInfo.cs">
       <SubType>Code</SubType>
     </Compile>
@@ -96,10 +91,6 @@
   </ItemGroup>
   <ItemGroup>
     <Page Include="ConfigurationControl.xaml">
-      <SubType>Designer</SubType>
-      <Generator>MSBuild:Compile</Generator>
-    </Page>
-    <Page Include="HtmlContentControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

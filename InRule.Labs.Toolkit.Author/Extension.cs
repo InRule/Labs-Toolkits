@@ -8,8 +8,8 @@ namespace InRule.Addins.ScenarioManager
 {
     class Extension : ExtensionBase
     {
-        private const string ExtensionGUID = "{12D17C1E-B381-45B9-9131-D1AA290D0301}";
-        private VisualDelegateCommand _loadHtmlCommand;
+        private const string ExtensionGUID = "{12D17C1E-B381-45B9-9131-D1AA290D0311}";
+        //private VisualDelegateCommand _loadHtmlCommand;
         private VisualDelegateCommand _otherCommand;
         private IRibbonGroup _group;
         private IRibbonTab _tab;
@@ -17,24 +17,24 @@ namespace InRule.Addins.ScenarioManager
 
         // To make system extension that cannot be disabled, change last parm to true
         public Extension()
-            : base("MyExtensionName", "MyExtensionDescription", new Guid(ExtensionGUID), false)
+            : base("Toolkits", "Safely reuse content from other rule applications.", new Guid(ExtensionGUID), false)
         {
 
         }
 
         public override void Enable()
         {
-            _tab = IrAuthorShell.Ribbon.AddTab("Simulation");
+            _tab = IrAuthorShell.Ribbon.AddTab("Toolkits");
             
             _group = _tab.AddGroup("My Group", null, "");
 
-            _loadHtmlCommand = new VisualDelegateCommand(LoadHtmlWindow, 
-                "Load HTML", 
-                ImageFactory.GetImageAuthoringAssembly(@"/Images/Find16.png"), 
-                ImageFactory.GetImageAuthoringAssembly(@"/Images/Find32.png"), 
-                false);
+            //_loadHtmlCommand = new VisualDelegateCommand(LoadHtmlWindow, 
+            //    "Load HTML", 
+           //     ImageFactory.GetImageAuthoringAssembly(@"/Images/Find16.png"), 
+           //     ImageFactory.GetImageAuthoringAssembly(@"/Images/Find32.png"), 
+           //     false);
 
-            _group.AddButton(_loadHtmlCommand);
+           // _group.AddButton(_loadHtmlCommand);
 
             _otherCommand = new VisualDelegateCommand(DoSomething, 
                 "Do something", 
@@ -49,10 +49,10 @@ namespace InRule.Addins.ScenarioManager
 
             SelectionManager.SelectedItemChanged += EnableButton;
 
-            var htmlContentService = ServiceManager.Compose<HtmlContentProvider>();
-            ServiceManager.SetService(htmlContentService);
+            //var htmlContentService = ServiceManager.Compose<HtmlContentProvider>();
+            //ServiceManager.SetService(htmlContentService);
             
-            ContentManager.SetProvider(typeof(HtmlDef), htmlContentService);
+           // ContentManager.SetProvider(typeof(HtmlDef), htmlContentService);
         }
 
         private void DoSomething(object obj)
@@ -100,23 +100,17 @@ namespace InRule.Addins.ScenarioManager
             // if rule app is open, buttons are enabled, otherwise they aren't
             if (RuleApplicationService.RuleApplicationDef == null)
             {
-                _loadHtmlCommand.IsEnabled = false;
+               // _loadHtmlCommand.IsEnabled = false;
                 _otherCommand.IsEnabled = false;
             }
             else
             {
-                _loadHtmlCommand.IsEnabled = true;
+               // _loadHtmlCommand.IsEnabled = true;
                 _otherCommand.IsEnabled = true;
             }
         }
 
-        private void LoadHtmlWindow(object obj)
-        {
-            var html = new HtmlDef();
-            html.Content = "hello there";
-
-            SelectionManager.SelectedItem = html;
-        }
+      
 
         public override void Disable()
         {
