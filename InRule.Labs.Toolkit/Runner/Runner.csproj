@@ -4,15 +4,17 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{AEACE79E-2307-4495-84A7-EBC1D9260BD7}</ProjectGuid>
-    <OutputType>Library</OutputType>
+    <ProjectGuid>{4A427CD0-6FE0-40FE-895A-ABB7DCDC4FCA}</ProjectGuid>
+    <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>com.inrule.labs.toolkit.shared</RootNamespace>
-    <AssemblyName>com.inrule.labs.toolkit.shared</AssemblyName>
+    <RootNamespace>Runner</RootNamespace>
+    <AssemblyName>Runner</AssemblyName>
     <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
@@ -22,6 +24,7 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
@@ -30,18 +33,6 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="InRule.Authoring">
-      <HintPath>C:\Program Files (x86)\InRule\irAuthor\InRule.Authoring.dll</HintPath>
-    </Reference>
-    <Reference Include="InRule.Common">
-      <HintPath>C:\Program Files (x86)\InRule\irAuthor\InRule.Common.dll</HintPath>
-    </Reference>
-    <Reference Include="InRule.Repository">
-      <HintPath>C:\Program Files (x86)\InRule\irAuthor\InRule.Repository.dll</HintPath>
-    </Reference>
-    <Reference Include="InRule.Repository.XmlSerializers">
-      <HintPath>C:\Program Files (x86)\InRule\irAuthor\InRule.Repository.XmlSerializers.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -52,8 +43,17 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Helper.cs" />
+    <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\InRule.Labs.Toolkit.Shared\InRule.Labs.Toolkit.Shared.csproj">
+      <Project>{aeace79e-2307-4495-84a7-ebc1d9260bd7}</Project>
+      <Name>InRule.Labs.Toolkit.Shared</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

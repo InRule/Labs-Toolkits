@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using InRule.Repository;
 
-namespace com.inrule.labs.toolkit.shared
+namespace InRule.Labs.Toolkit.Shared
 {
     public class Helper
     {
