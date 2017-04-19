@@ -38,25 +38,46 @@ namespace InRule.Labs.Toolkit.Shared
 
         private void PullEntities()
         {
-
-            for (int i = 0; i < _source.Entities.Count; i++)
+            foreach (RuleRepositoryDefBase entityDef in _source.Entities)
             {
-                Debug.WriteLine(_source.Entities[i].Name);
-                _dest.Entities.Add(_source.Entities[i].CopyWithSameGuids());
+                ProcessRulesetChildren(entityDef);
+                _dest.Entities.Add(entityDef.CopyWithSameGuids());
             }
-           // _dest.SaveToFile(_destRuleappPath);
-            
         }
         private void PullRulesets()
         {
-
-            for (int i = 0; i < _source.RuleSets.Count; i++)
+            foreach (RuleRepositoryDefBase rulesetDef in _source.RuleSets)
             {
-                Debug.WriteLine(_source.RuleSets[i].Name);
-                _dest.RuleSets.Add(_source.RuleSets[i].CopyWithSameGuids());
+                ProcessRulesetChildren(rulesetDef);
+                _dest.RuleSets.Add(rulesetDef.CopyWithSameGuids());
             }
-             _dest.SaveToFile(_destinationRuleappPath);
+            _dest.SaveToFile(_destinationRuleappPath);
+        }
 
+        private void ProcessRulesetChildren(RuleRepositoryDefBase child)
+        {
+            StampWithAttribute(child);
+            var collquery = from childcollections in child.GetAllChildCollections()
+                            select childcollections;
+            foreach (RuleRepositoryDefCollection defcollection in collquery)
+            {
+               // Debug.WriteLine(defcollection.GetType().FullName);
+                var defquery = from RuleRepositoryDefBase items in defcollection select items;
+                foreach (var def in defquery)
+                {
+                    ProcessRulesetChildren(def);
+                }
+            } 
+        }
+
+        private void StampWithAttribute(RuleRepositoryDefBase def)
+        {
+            Debug.WriteLine(def.Name);
+            if (def.Attributes.Default.Contains("Toolkit") == false)
+            {
+                def.Attributes.Default.Add("Toolkit", _source.Name + "," + _source.Revision + "," + _source.Guid);
+            }
+            
         }
 
     }

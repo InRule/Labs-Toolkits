@@ -1,4 +1,6 @@
-﻿using InRule.Labs.Toolkit.Shared;
+﻿using System;
+using System.IO;
+using InRule.Labs.Toolkit.Shared;
 
 namespace Runner
 {
@@ -7,7 +9,10 @@ namespace Runner
         static void Main(string[] args)
         {
             var runner = new Helper();
-            runner.ImportArtifacts(@"C:\Users\Christopher Berg\Documents\SourceRuleApplication.ruleappx", @"C:\Users\Christopher Berg\Documents\DestRuleApplication.ruleappx");
+            string destpath = @"C:\Users\Christopher Berg\Documents\DestRuleApplication" + "_" +
+                              Guid.NewGuid().ToString() + ".ruleappx";
+            File.Copy(@"C:\Users\Christopher Berg\Documents\DestRuleApplication.ruleappx", destpath);
+            runner.ImportArtifacts(@"C:\Users\Christopher Berg\Documents\SourceRuleApplication.ruleappx", destpath);
         }
     }
 }
