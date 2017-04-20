@@ -13,6 +13,7 @@ namespace Runner
                               Guid.NewGuid().ToString() + ".ruleappx";
             File.Copy(@"C:\Users\Christopher Berg\Documents\DestRuleApplication.ruleappx", destpath);
             runner.ImportArtifacts(@"C:\Users\Christopher Berg\Documents\SourceRuleApplication.ruleappx", destpath);
+            runner.RemoveArtifacts(@"C:\Users\Christopher Berg\Documents\SourceRuleApplication.ruleappx", destpath);
         }
     }
 }

@@ -4,7 +4,11 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using InRule.Authoring.Commands;
+using InRule.Authoring.Extensions;
 using InRule.Repository;
+using InRule.Repository.Attributes;
+using InRule.Repository.RuleElements;
 
 namespace InRule.Labs.Toolkit.Shared
 {
@@ -12,9 +16,9 @@ namespace InRule.Labs.Toolkit.Shared
     {
         private string _sourceRuleappPath;  
         private string _destinationRuleappPath;   
-
         private RuleApplicationDef _source = null;
         private RuleApplicationDef _dest = null;
+        private string _stamp = "";
 
         public void ImportArtifacts(string sourceRuleappPath, string destinationRuleappPath)
         {
@@ -24,18 +28,36 @@ namespace InRule.Labs.Toolkit.Shared
                 _destinationRuleappPath = destinationRuleappPath;
                 _source = RuleApplicationDef.Load(_sourceRuleappPath);
                 _dest = RuleApplicationDef.Load(_destinationRuleappPath);
-           
+                _stamp = _source.Name + "," + _source.Revision + "," + _source.Guid;
                 PullEntities();
                 PullRulesets();
+                _dest.SaveToFile(_destinationRuleappPath);
             }
             catch (Exception ex)
             {
                 Debug.WriteLine(ex.Message + ex.StackTrace + ex.InnerException);
             }
-           
         }
 
+        public void RemoveArtifacts(string sourceRuleappPath, string destinationRuleappPath)
+        {
+            try
+            {
+                _sourceRuleappPath = sourceRuleappPath;
+                _destinationRuleappPath = destinationRuleappPath;
+                _source = RuleApplicationDef.Load(_sourceRuleappPath);
+                _dest = RuleApplicationDef.Load(_destinationRuleappPath);
+                _stamp = _source.Name + "," + _source.Revision + "," + _source.Guid;
+                CleanEntities();
+                CleanRulesets();
+                _dest.SaveToFile(_destinationRuleappPath);
 
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine(ex.Message + ex.StackTrace + ex.InnerException);
+            }
+        }
         private void PullEntities()
         {
             foreach (RuleRepositoryDefBase entityDef in _source.Entities)
@@ -51,7 +73,36 @@ namespace InRule.Labs.Toolkit.Shared
                 ProcessRulesetChildren(rulesetDef);
                 _dest.RuleSets.Add(rulesetDef.CopyWithSameGuids());
             }
-            _dest.SaveToFile(_destinationRuleappPath);
+        }
+
+        private void CleanEntities()
+        {
+            foreach (EntityDef entityDef in _dest.Entities.ToList<EntityDef>())
+            {
+                    foreach (
+                        XmlSerializableStringDictionary.XmlSerializableStringDictionaryItem att in
+                        entityDef.Attributes.Default)
+                    {
+                        if (att.Value == _stamp)
+                        {
+                            _dest.Entities.Remove(entityDef);
+                        }
+                    }
+            }
+        }
+        private void CleanRulesets()
+        {
+            foreach (RuleRepositoryDefBase rulesetDef in _dest.RuleSets.ToList<RuleRepositoryDefBase>())
+            {
+                foreach (XmlSerializableStringDictionary.XmlSerializableStringDictionaryItem att in rulesetDef.Attributes.Default )
+                {
+                    if (att.Value == _stamp)
+                    {
+                        _dest.RuleSets.Remove(rulesetDef);
+                    }
+                }
+                
+            }
         }
 
         private void ProcessRulesetChildren(RuleRepositoryDefBase child)
@@ -61,7 +112,6 @@ namespace InRule.Labs.Toolkit.Shared
                             select childcollections;
             foreach (RuleRepositoryDefCollection defcollection in collquery)
             {
-               // Debug.WriteLine(defcollection.GetType().FullName);
                 var defquery = from RuleRepositoryDefBase items in defcollection select items;
                 foreach (var def in defquery)
                 {
@@ -69,7 +119,6 @@ namespace InRule.Labs.Toolkit.Shared
                 }
             } 
         }
-
         private void StampWithAttribute(RuleRepositoryDefBase def)
         {
             Debug.WriteLine(def.Name);
