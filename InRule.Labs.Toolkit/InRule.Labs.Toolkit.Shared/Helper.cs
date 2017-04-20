@@ -20,6 +20,20 @@ namespace InRule.Labs.Toolkit.Shared
         private RuleApplicationDef _dest = null;
         private string _stamp = "";
 
+        public void ImportArtifacts(RuleApplicationDef source, RuleApplicationDef dest)
+        {
+            _source = source;
+            _dest = dest;
+            MakeStamp();
+            Import();
+        }
+        public void RemoveArtifacts(RuleApplicationDef source, RuleApplicationDef dest)
+        {
+            _source = source;
+            _dest = dest;
+            MakeStamp();
+            Remove();
+        }
         public void ImportArtifacts(string sourceRuleappPath, string destinationRuleappPath)
         {
             try
@@ -28,15 +42,28 @@ namespace InRule.Labs.Toolkit.Shared
                 _destinationRuleappPath = destinationRuleappPath;
                 _source = RuleApplicationDef.Load(_sourceRuleappPath);
                 _dest = RuleApplicationDef.Load(_destinationRuleappPath);
-                _stamp = _source.Name + "," + _source.Revision + "," + _source.Guid;
-                PullEntities();
-                PullRulesets();
+                MakeStamp();
+                Import();
                 _dest.SaveToFile(_destinationRuleappPath);
             }
             catch (Exception ex)
             {
                 Debug.WriteLine(ex.Message + ex.StackTrace + ex.InnerException);
             }
+        }
+        private void MakeStamp()
+        {
+            _stamp = _source.Name + "," + _source.Revision + "," + _source.Guid;
+        }
+        private void Import()
+        {
+            PullEntities();
+            PullRulesets();
+        }
+        private void Remove()
+        {
+            CleanEntities();
+            CleanRulesets();
         }
 
         public void RemoveArtifacts(string sourceRuleappPath, string destinationRuleappPath)
@@ -48,8 +75,7 @@ namespace InRule.Labs.Toolkit.Shared
                 _source = RuleApplicationDef.Load(_sourceRuleappPath);
                 _dest = RuleApplicationDef.Load(_destinationRuleappPath);
                 _stamp = _source.Name + "," + _source.Revision + "," + _source.Guid;
-                CleanEntities();
-                CleanRulesets();
+                Remove();
                 _dest.SaveToFile(_destinationRuleappPath);
 
             }
