@@ -83,9 +83,17 @@ namespace InRule.Labs.Toolkit.Shared
             }
             return isMatch;
         }
+        public string GetStamp(RuleApplicationDef source)
+        {
+            return MakeStamp(source);
+        }
+        private string MakeStamp(RuleApplicationDef source)
+        {
+            return _source.Name + "," + _source.Revision + "," + _source.Guid;
+        }
         private void MakeStamp()
         {
-            _stamp = _source.Name + "," + _source.Revision + "," + _source.Guid;
+            _stamp = MakeStamp(_source);
         }
         private void Import()
         {
