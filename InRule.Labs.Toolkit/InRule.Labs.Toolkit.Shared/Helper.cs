@@ -14,8 +14,6 @@ namespace InRule.Labs.Toolkit.Shared
 {
     public class Helper
     {
-        private string _sourceRuleappPath;  
-        private string _destinationRuleappPath;   
         private RuleApplicationDef _source = null;
         private RuleApplicationDef _dest = null;
         private string _stamp = "";
@@ -27,6 +25,23 @@ namespace InRule.Labs.Toolkit.Shared
             MakeStamp();
             Import();
         }
+        public void ImportArtifacts(RuleApplicationDef source, RuleApplicationDef dest, string savePath)
+        {
+            ImportArtifacts(source,dest);
+            _dest.SaveToFile(savePath);
+        }
+        public void ImportArtifacts(string sourceRuleappPath, string destinationRuleappPath)
+        {
+            try
+            {
+                ImportArtifacts(RuleApplicationDef.Load(sourceRuleappPath),
+                    RuleApplicationDef.Load(destinationRuleappPath), destinationRuleappPath);    
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine(ex.Message + ex.StackTrace + ex.InnerException);
+            }
+        }
         public void RemoveArtifacts(RuleApplicationDef source, RuleApplicationDef dest)
         {
             _source = source;
@@ -34,22 +49,39 @@ namespace InRule.Labs.Toolkit.Shared
             MakeStamp();
             Remove();
         }
-        public void ImportArtifacts(string sourceRuleappPath, string destinationRuleappPath)
+        public void RemoveArtifacts(RuleApplicationDef source, RuleApplicationDef dest, string savePath)
+        {
+            RemoveArtifacts(source, dest);
+            _dest.SaveToFile(savePath);
+        }
+        public void RemoveArtifacts(string sourceRuleappPath, string destinationRuleappPath)
         {
             try
             {
-                _sourceRuleappPath = sourceRuleappPath;
-                _destinationRuleappPath = destinationRuleappPath;
-                _source = RuleApplicationDef.Load(_sourceRuleappPath);
-                _dest = RuleApplicationDef.Load(_destinationRuleappPath);
-                MakeStamp();
-                Import();
-                _dest.SaveToFile(_destinationRuleappPath);
+                RemoveArtifacts(RuleApplicationDef.Load(sourceRuleappPath),
+                    RuleApplicationDef.Load(destinationRuleappPath), destinationRuleappPath);
             }
             catch (Exception ex)
             {
                 Debug.WriteLine(ex.Message + ex.StackTrace + ex.InnerException);
             }
+        }
+        private bool IsToolkitMatch(RuleRepositoryDefBase def)
+        {
+            return IsToolkitMatch(def, _stamp);
+        }
+        public bool IsToolkitMatch(RuleRepositoryDefBase def, string stamp)
+        {
+            var isMatch = false;
+            var attributes =
+                from XmlSerializableStringDictionary.XmlSerializableStringDictionaryItem att in def.Attributes.Default
+                where att.Value == _stamp 
+                select att;
+            if (attributes.Any())
+            {
+                isMatch = true;
+            }
+            return isMatch;
         }
         private void MakeStamp()
         {
@@ -64,25 +96,6 @@ namespace InRule.Labs.Toolkit.Shared
         {
             CleanEntities();
             CleanRulesets();
-        }
-
-        public void RemoveArtifacts(string sourceRuleappPath, string destinationRuleappPath)
-        {
-            try
-            {
-                _sourceRuleappPath = sourceRuleappPath;
-                _destinationRuleappPath = destinationRuleappPath;
-                _source = RuleApplicationDef.Load(_sourceRuleappPath);
-                _dest = RuleApplicationDef.Load(_destinationRuleappPath);
-                _stamp = _source.Name + "," + _source.Revision + "," + _source.Guid;
-                Remove();
-                _dest.SaveToFile(_destinationRuleappPath);
-
-            }
-            catch (Exception ex)
-            {
-                Debug.WriteLine(ex.Message + ex.StackTrace + ex.InnerException);
-            }
         }
         private void PullEntities()
         {
@@ -100,37 +113,26 @@ namespace InRule.Labs.Toolkit.Shared
                 _dest.RuleSets.Add(rulesetDef.CopyWithSameGuids());
             }
         }
-
         private void CleanEntities()
         {
             foreach (EntityDef entityDef in _dest.Entities.ToList<EntityDef>())
             {
-                    foreach (
-                        XmlSerializableStringDictionary.XmlSerializableStringDictionaryItem att in
-                        entityDef.Attributes.Default)
-                    {
-                        if (att.Value == _stamp)
-                        {
-                            _dest.Entities.Remove(entityDef);
-                        }
-                    }
+                if (IsToolkitMatch(entityDef))
+                {
+                    _dest.Entities.Remove(entityDef);
+                }
             }
         }
         private void CleanRulesets()
         {
             foreach (RuleRepositoryDefBase rulesetDef in _dest.RuleSets.ToList<RuleRepositoryDefBase>())
             {
-                foreach (XmlSerializableStringDictionary.XmlSerializableStringDictionaryItem att in rulesetDef.Attributes.Default )
+                if (IsToolkitMatch(rulesetDef))
                 {
-                    if (att.Value == _stamp)
-                    {
-                        _dest.RuleSets.Remove(rulesetDef);
-                    }
+                    _dest.RuleSets.Remove(rulesetDef);
                 }
-                
             }
         }
-
         private void ProcessRulesetChildren(RuleRepositoryDefBase child)
         {
             StampWithAttribute(child);
@@ -148,12 +150,11 @@ namespace InRule.Labs.Toolkit.Shared
         private void StampWithAttribute(RuleRepositoryDefBase def)
         {
             Debug.WriteLine(def.Name);
-            if (def.Attributes.Default.Contains("Toolkit") == false)
+            //if for whatever reason it's already been stamped
+            if (IsToolkitMatch(def) == false)
             {
-                def.Attributes.Default.Add("Toolkit", _source.Name + "," + _source.Revision + "," + _source.Guid);
+                def.Attributes.Default.Add("Toolkit", _stamp);
             }
-            
         }
-
     }
 }
