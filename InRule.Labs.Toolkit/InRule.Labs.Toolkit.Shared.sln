@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Runner", "Runner\Runner.csp
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InRule.Labs.Toolkit.Shared", "InRule.Labs.Toolkit.Shared\InRule.Labs.Toolkit.Shared.csproj", "{AEACE79E-2307-4495-84A7-EBC1D9260BD7}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "InRule.Labs.Toolkit.Shared.Tests", "InRule.Labs.Toolkit.Shared.Tests\InRule.Labs.Toolkit.Shared.Tests.csproj", "{F5B2AB9F-88E1-48FF-9F62-3E27A46BF2CB}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{AEACE79E-2307-4495-84A7-EBC1D9260BD7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AEACE79E-2307-4495-84A7-EBC1D9260BD7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AEACE79E-2307-4495-84A7-EBC1D9260BD7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F5B2AB9F-88E1-48FF-9F62-3E27A46BF2CB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F5B2AB9F-88E1-48FF-9F62-3E27A46BF2CB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F5B2AB9F-88E1-48FF-9F62-3E27A46BF2CB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F5B2AB9F-88E1-48FF-9F62-3E27A46BF2CB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

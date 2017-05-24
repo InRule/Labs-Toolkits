@@ -9,14 +9,15 @@ using InRule.Authoring.Extensions;
 using InRule.Repository;
 using InRule.Repository.Attributes;
 using InRule.Repository.RuleElements;
+using System.IO;
 
 namespace InRule.Labs.Toolkit.Shared
 {
     public class Helper
     {
-        private RuleApplicationDef _source = null;
-        private RuleApplicationDef _dest = null;
-        private string _stamp = "";
+        internal RuleApplicationDef _source = null;
+        internal RuleApplicationDef _dest = null;
+        internal string _stamp = "";
 
         public void ImportArtifacts(RuleApplicationDef source, RuleApplicationDef dest)
         {
@@ -24,6 +25,7 @@ namespace InRule.Labs.Toolkit.Shared
             _dest = dest;
             MakeStamp();
             Import();
+            StoreSourceRuleapp(_source,_dest);
         }
         public void ImportArtifacts(RuleApplicationDef source, RuleApplicationDef dest, string savePath)
         {
@@ -48,6 +50,7 @@ namespace InRule.Labs.Toolkit.Shared
             _dest = dest;
             MakeStamp();
             Remove();
+            RemoveSourceRuleapp(source, dest);
         }
         public void RemoveArtifacts(RuleApplicationDef source, RuleApplicationDef dest, string savePath)
         {
@@ -87,25 +90,86 @@ namespace InRule.Labs.Toolkit.Shared
         {
             return MakeStamp(source);
         }
-        private string MakeStamp(RuleApplicationDef source)
+        internal string GetTmpPath()
+        {
+            return Path.GetTempPath() + Guid.NewGuid() + ".ruleappx";
+        }
+        internal string MakeStamp(RuleApplicationDef source)
         {
             return _source.Name + "," + _source.Revision + "," + _source.Guid;
         }
-        private void MakeStamp()
+        internal void MakeStamp()
         {
             _stamp = MakeStamp(_source);
         }
-        private void Import()
+        public void StoreSourceRuleapp(RuleApplicationDef source, RuleApplicationDef dest)
+        {
+            //Save temporarily to the filesystem
+            string tmp = GetTmpPath();
+            source.SaveToFile(tmp);
+            string file = EncodeFile(tmp);
+            //Store in target attribute with stamp
+            string stamp = MakeStamp(source);
+            StoreFileInAttribute(file, stamp, dest);
+        }
+        internal void StoreFileInAttribute(string file, string key, RuleApplicationDef dest)
+        {
+            dest.Attributes.Default.Add(key, file);
+        }
+        internal string EncodeFile(string path)
+        {
+            //Base64Encode file
+            byte[] bytes = File.ReadAllBytes(path);
+            return Convert.ToBase64String(bytes);
+        }
+        internal void DecodeFile(string file, string path)
+        {
+            byte[] bytes = Convert.FromBase64String(file);
+            File.WriteAllBytes(path, bytes);
+        }
+        public RuleApplicationDef  GetSourceRuleapp(string key, RuleApplicationDef dest)
+        {
+            RuleApplicationDef def = null;
+            //Get from attribute
+            XmlSerializableStringDictionary.XmlSerializableStringDictionaryItem att = FindSourceAttribute(key, dest);
+            if (att != null)
+            {
+                string file = att.Value;     
+                string tmpPath = GetTmpPath();
+                DecodeFile(file, tmpPath);
+                def = RuleApplicationDef.Load(tmpPath);
+            }
+            return def;
+        }
+        public void RemoveSourceRuleapp(RuleApplicationDef source, RuleApplicationDef dest)
+        {
+            string stamp = MakeStamp(source);
+            dest.Attributes.Default.Remove(stamp);
+        }
+        internal XmlSerializableStringDictionary.XmlSerializableStringDictionaryItem FindSourceAttribute(string key, RuleApplicationDef dest)
+        {
+            XmlSerializableStringDictionary.XmlSerializableStringDictionaryItem resultAtt = null;
+            foreach (XmlSerializableStringDictionary.XmlSerializableStringDictionaryItem att in dest.Attributes.Default)
+            {
+                if (att.Key == key)
+                {
+                    resultAtt = att;
+                    break;
+                }
+            }
+            return resultAtt;
+        }
+        internal void Import()
         {
             PullEntities();
             PullRulesets();
         }
-        private void Remove()
+        internal void Remove()
         {
             CleanEntities();
             CleanRulesets();
         }
-        private void PullEntities()
+        internal void PullEntities()
         {
             foreach (RuleRepositoryDefBase entityDef in _source.Entities)
             {
@@ -113,7 +177,7 @@ namespace InRule.Labs.Toolkit.Shared
                 _dest.Entities.Add(entityDef.CopyWithSameGuids());
             }
         }
-        private void PullRulesets()
+        internal void PullRulesets()
         {
             foreach (RuleRepositoryDefBase rulesetDef in _source.RuleSets)
             {
@@ -121,7 +185,7 @@ namespace InRule.Labs.Toolkit.Shared
                 _dest.RuleSets.Add(rulesetDef.CopyWithSameGuids());
             }
         }
-        private void CleanEntities()
+        internal void CleanEntities()
         {
             foreach (EntityDef entityDef in _dest.Entities.ToList<EntityDef>())
             {
@@ -131,7 +195,7 @@ namespace InRule.Labs.Toolkit.Shared
                 }
             }
         }
-        private void CleanRulesets()
+        internal void CleanRulesets()
         {
             foreach (RuleRepositoryDefBase rulesetDef in _dest.RuleSets.ToList<RuleRepositoryDefBase>())
             {
@@ -141,7 +205,7 @@ namespace InRule.Labs.Toolkit.Shared
                 }
             }
         }
-        private void ProcessRulesetChildren(RuleRepositoryDefBase child)
+        internal void ProcessRulesetChildren(RuleRepositoryDefBase child)
         {
             StampWithAttribute(child);
             var collquery = from childcollections in child.GetAllChildCollections()
@@ -155,7 +219,7 @@ namespace InRule.Labs.Toolkit.Shared
                 }
             } 
         }
-        private void StampWithAttribute(RuleRepositoryDefBase def)
+        internal void StampWithAttribute(RuleRepositoryDefBase def)
         {
             Debug.WriteLine(def.Name);
             //if for whatever reason it's already been stamped
