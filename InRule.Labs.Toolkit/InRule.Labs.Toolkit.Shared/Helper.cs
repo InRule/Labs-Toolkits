@@ -69,7 +69,7 @@ namespace InRule.Labs.Toolkit.Shared
                 Debug.WriteLine(ex.Message + ex.StackTrace + ex.InnerException);
             }
         }
-        private bool IsToolkitMatch(RuleRepositoryDefBase def)
+        internal bool IsToolkitMatch(RuleRepositoryDefBase def)
         {
             return IsToolkitMatch(def, _stamp);
         }
@@ -78,7 +78,7 @@ namespace InRule.Labs.Toolkit.Shared
             var isMatch = false;
             var attributes =
                 from XmlSerializableStringDictionary.XmlSerializableStringDictionaryItem att in def.Attributes.Default
-                where att.Value == _stamp 
+                where att.Value == stamp 
                 select att;
             if (attributes.Any())
             {
@@ -96,7 +96,7 @@ namespace InRule.Labs.Toolkit.Shared
         }
         internal string MakeStamp(RuleApplicationDef source)
         {
-            return _source.Name + "," + _source.Revision + "," + _source.Guid;
+            return source.Name + "," + source.Revision + "," + source.Guid;
         }
         internal void MakeStamp()
         {
