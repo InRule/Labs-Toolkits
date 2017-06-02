@@ -54,9 +54,29 @@ namespace InRule.Labs.Toolkit.Shared.Tests
         {
             Helper h = new Helper();
             RuleApplicationDef source = RuleApplicationDef.Load(_sourcePath);
-            RuleApplicationDef dest = RuleApplicationDef.Load(_destPath);
-           
-
+            EntityDef ent = new EntityDef();
+            h._stamp = h.MakeStamp(source);
+            h.StampWithAttribute(ent);
+            Assert.IsTrue(h.IsToolkitMatch(ent,h._stamp)); //the purpose is to test the helper method look for a stamped attribute
+            Assert.IsFalse(h.IsToolkitMatch(new EntityDef()),h._stamp); //no stamp should be false
         }
+
+        [Test]
+        public void IntegrationTests()
+        {
+            Helper h = new Helper();
+            RuleApplicationDef source = RuleApplicationDef.Load(_sourcePath);
+            RuleApplicationDef dest = RuleApplicationDef.Load(_destPath);
+            h.ImportArtifacts(source,dest);
+            Assert.IsTrue(source.Entities.Count == dest.Entities.Count);
+            Assert.IsTrue(source.RuleSets.Count == dest.RuleSets.Count);
+            h.RemoveArtifacts(source,dest);
+            Assert.IsTrue(dest.Entities.Count == 0); //all imported entities are gone
+            Assert.IsTrue(dest.RuleSets.Count == 0); //all imported RuleSets are gone
+            Assert.IsTrue(dest.Attributes.Default.Count == 0);  //the base 64 encoded source ruleapp is removed
+        }
+
+
+
     }
 }
