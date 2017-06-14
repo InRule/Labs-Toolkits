@@ -3,17 +3,25 @@ using InRule.Authoring.Commanding;
 using InRule.Authoring.Media;
 using InRule.Authoring.Windows;
 using InRule.Authoring.Windows.Controls;
+using InRule.Authoring.ComponentModel;
+using InRule.Authoring.Services;
+using InRule.Common.Utilities;
+using InRule.Repository;
+using InRule.Repository.RuleElements;
 
-namespace InRule.Addins.ScenarioManager
+namespace InRule.Labs.Toolkit.Author
 {
     class Extension : ExtensionBase
     {
-        private const string ExtensionGUID = "{12D17C1E-B381-45B9-9131-D1AA290D0311}";
-        //private VisualDelegateCommand _loadHtmlCommand;
-        private VisualDelegateCommand _otherCommand;
-        private IRibbonGroup _group;
-        private IRibbonTab _tab;
-        
+        public CategoryModel _categoryModel;
+        private VisualDelegateCommand _showRuleSetsByCategoryCommand;
+        private RuleApplicationController _ruleAppController;
+        private IToolWindow _toolWindow;
+        private IRibbonToggleButton _button;
+        private const string RULES_BY_CAT = "Rules by Category";
+
+        private const string ExtensionGUID = "{12D17C1E-B381-45B9-9131-D1AA290D0312}";
+      
 
         // To make system extension that cannot be disabled, change last parm to true
         public Extension()
@@ -24,97 +32,50 @@ namespace InRule.Addins.ScenarioManager
 
         public override void Enable()
         {
-            _tab = IrAuthorShell.Ribbon.AddTab("Toolkits");
-            
-            _group = _tab.AddGroup("My Group", null, "");
+            RuleApplicationService.Opened += WhenRuleAppLoaded;
+            RuleApplicationService.Closed += WhenRuleAppClosed;
 
-            //_loadHtmlCommand = new VisualDelegateCommand(LoadHtmlWindow, 
-            //    "Load HTML", 
-           //     ImageFactory.GetImageAuthoringAssembly(@"/Images/Find16.png"), 
-           //     ImageFactory.GetImageAuthoringAssembly(@"/Images/Find32.png"), 
-           //     false);
+            _ruleAppController = ServiceManager.GetService<RuleApplicationService>().Controller;
+            _ruleAppController.CategoryRemovedFromDef += WhenCategoryRemovedFromDef;
+            _ruleAppController.CategoryAddedToDef += WhenCategoryAddedToDef;
+            _ruleAppController.RuleSetAdded += WhenRuleSetAdded;
+            _ruleAppController.CategoryAdded += WhenCategoryAdded;
+            _ruleAppController.RemovingDef += WhenDefRemoved;
 
-           // _group.AddButton(_loadHtmlCommand);
+            var enableButton = RuleApplicationService.RuleApplicationDef != null;
+            _showRuleSetsByCategoryCommand = new VisualDelegateCommand(ToggleDisplay, RULES_BY_CAT, null, ImageFactory.GetImageAuthoringAssembly("/Images/SchemaSource32.png"), enableButton);
 
-            _otherCommand = new VisualDelegateCommand(DoSomething, 
-                "Do something", 
-                ImageFactory.GetImageAuthoringAssembly(@"/Images/Find16.png"), 
-                ImageFactory.GetImageAuthoringAssembly(@"/Images/Find32.png"), 
-                false);
-
-            _group.AddButton(_otherCommand);
-            
-            RuleApplicationService.Opened += EnableButton;
-            RuleApplicationService.Closed += EnableButton;
-
-            SelectionManager.SelectedItemChanged += EnableButton;
-
-            //var htmlContentService = ServiceManager.Compose<HtmlContentProvider>();
-            //ServiceManager.SetService(htmlContentService);
-            
-           // ContentManager.SetProvider(typeof(HtmlDef), htmlContentService);
+            var group = IrAuthorShell.HomeTab.GetGroup("Tags");
+            _button = group.AddToggleButton(_showRuleSetsByCategoryCommand, "Rules by Category");
         }
 
         private void DoSomething(object obj)
         {
-            var config = new Configuration();
-            config.Height = 39;
-            config.Width = 20;
-
-            // create an instance of the user control
-            var control = new ConfigurationControl(config);
-
-
-            // use the window factory to create the window passing the description, control and required buttons
-            var window = WindowFactory.CreateWindow("Config Settings", control, "OK", "Cancel");
-
-            // subscribe to the click event to run the desired code
-            window.ButtonClicked += delegate (object sender, WindowButtonClickedEventArgs<ConfigurationControl> e)
-            {
-                var closeWindow = true; // if you want to prevent them from closing the window (e.g. invalid item), set closeWindow to true
-
-                if (e.ClickedButtonText == "OK")
-                {
-                    // validate
-                    if (false) // not valid scenario
-                    {
-                        // report issue however you want and leave window open
-                        MessageBoxFactory.Show("Invalid stuff", "Invalid", MessageBoxFactoryImage.Error);
-
-                        closeWindow = false;
-                    }
-                }
-
-                if (closeWindow)
-                {
-                    window.Close();
-                }
-            };
-
-            window.Show();
+           
         }
 
         private void EnableButton(object sender, EventArgs e)
         {
 
-            // if rule app is open, buttons are enabled, otherwise they aren't
-            if (RuleApplicationService.RuleApplicationDef == null)
-            {
-               // _loadHtmlCommand.IsEnabled = false;
-                _otherCommand.IsEnabled = false;
-            }
-            else
-            {
-               // _loadHtmlCommand.IsEnabled = true;
-                _otherCommand.IsEnabled = true;
-            }
         }
 
       
 
         public override void Disable()
         {
-            IrAuthorShell.HomeTab.RemoveGroup(_group);
+            var tagsGroup = IrAuthorShell.HomeTab.GetGroup("Tags");
+            tagsGroup.RemoveItem(_button);
+
+            _ruleAppController.CategoryRemovedFromDef -= WhenCategoryRemovedFromDef;
+            _ruleAppController.CategoryAddedToDef -= WhenCategoryAddedToDef;
+            _ruleAppController.RuleSetAdded -= WhenRuleSetAdded;
+            _ruleAppController.CategoryAdded -= WhenCategoryAdded;
+            _ruleAppController.RemovingDef -= WhenDefRemoved;
+
+            if (_toolWindow != null)
+            {
+                _toolWindow.Destroy();
+            }
         }
     }
 }

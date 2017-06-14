@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Text;
@@ -10,27 +11,82 @@ using InRule.Repository;
 using InRule.Repository.Attributes;
 using InRule.Repository.RuleElements;
 using System.IO;
+using InRule.Labs.Toolkit.Shared.Model;
 
 namespace InRule.Labs.Toolkit.Shared
 {
     public class Helper
     {
-        internal RuleApplicationDef _source = null;
-        internal RuleApplicationDef _dest = null;
-        internal string _stamp = "";
+        public ObservableCollection<ToolkitContents> GetToolkits(RuleApplicationDef dest)
+        {
+            ObservableCollection <ToolkitContents> toolkits = new ObservableCollection<ToolkitContents>();
+            foreach (XmlSerializableStringDictionary.XmlSerializableStringDictionaryItem att in dest.Attributes.Default)
+            {
+                if (att.Key.Contains("Toolkit:"))
+                {
+                    string key = att.Key.Substring(8, att.Key.Length - 8);  //trim toolkit prefix
+                    ToolkitContents tk = new ToolkitContents();
+                    ParseKey(key,tk);
+                    tk.Contents = GetToolkitContents(key, dest);
+                    toolkits.Add(tk);
+                }
+            }
+            return toolkits;
+        }
+        
+        internal bool Exists(RuleApplicationDef source, RuleApplicationDef dest)
+        {
+            bool exists = false;
+            foreach (XmlSerializableStringDictionary.XmlSerializableStringDictionaryItem att in dest.Attributes.Default)
+            {
+                if (att.Key.Contains("Toolkit:"))
+                {
+                    string key = att.Key.Substring(8, att.Key.Length - 8); //trim toolkit prefix
+                    if (MakeKey(source) == key)
+                    {
+                        exists = true;
+                        break;
+                    }
+                }
+            }
+            return exists;
+        }
+        
+        internal void ParseKey(string key, ToolkitContents toolkit)
+        {
+            toolkit.Name = key.Split(',')[0];
+            toolkit.Revision = key.Split(',')[1];
+            toolkit.GUID = key.Split(',')[2];
+        }
+        internal ObservableCollection<RuleRepositoryDefBase> GetToolkitContents(string key, RuleApplicationDef dest)
+        {
+            ObservableCollection<RuleRepositoryDefBase> list = new ObservableCollection<RuleRepositoryDefBase>();
+            //unpack the source ruleappdef
+            RuleApplicationDef source = this.GetSourceRuleapp("Toolkit:" + key, dest);
 
+            foreach (RuleRepositoryDefBase entityDef in source.Entities)
+            {
+                ProcessChildren(entityDef, list, key);
+            }
+            foreach (RuleRepositoryDefBase rulesetDef in source.RuleSets)
+            {
+                ProcessChildren(rulesetDef, list, key);
+            }
+            return list;
+        }
         public void ImportArtifacts(RuleApplicationDef source, RuleApplicationDef dest)
         {
-            _source = source;
-            _dest = dest;
-            MakeStamp();
-            Import();
-            StoreSourceRuleapp(_source,_dest);
+            if (Exists(source, dest))
+            {
+                throw new DuplicateToolkitException("Toolkit already exists in the destination rule application.");
+            }
+            Import(source, dest);
+            StoreSourceRuleapp(source,dest);
         }
         public void ImportArtifacts(RuleApplicationDef source, RuleApplicationDef dest, string savePath)
         {
             ImportArtifacts(source,dest);
-            _dest.SaveToFile(savePath);
+            dest.SaveToFile(savePath);
         }
         public void ImportArtifacts(string sourceRuleappPath, string destinationRuleappPath)
         {
@@ -46,16 +102,14 @@ namespace InRule.Labs.Toolkit.Shared
         }
         public void RemoveArtifacts(RuleApplicationDef source, RuleApplicationDef dest)
         {
-            _source = source;
-            _dest = dest;
-            MakeStamp();
-            Remove();
+            string key = MakeKey(source);
+            Remove(dest, key);
             RemoveSourceRuleapp(source, dest);
         }
         public void RemoveArtifacts(RuleApplicationDef source, RuleApplicationDef dest, string savePath)
         {
             RemoveArtifacts(source, dest);
-            _dest.SaveToFile(savePath);
+            dest.SaveToFile(savePath);
         }
         public void RemoveArtifacts(string sourceRuleappPath, string destinationRuleappPath)
         {
@@ -69,16 +123,12 @@ namespace InRule.Labs.Toolkit.Shared
                 Debug.WriteLine(ex.Message + ex.StackTrace + ex.InnerException);
             }
         }
-        internal bool IsToolkitMatch(RuleRepositoryDefBase def)
-        {
-            return IsToolkitMatch(def, _stamp);
-        }
-        public bool IsToolkitMatch(RuleRepositoryDefBase def, string stamp)
+        public bool IsToolkitMatch(RuleRepositoryDefBase def, string key)
         {
             var isMatch = false;
             var attributes =
                 from XmlSerializableStringDictionary.XmlSerializableStringDictionaryItem att in def.Attributes.Default
-                where att.Value == stamp 
+                where att.Value == key 
                 select att;
             if (attributes.Any())
             {
@@ -86,21 +136,17 @@ namespace InRule.Labs.Toolkit.Shared
             }
             return isMatch;
         }
-        public string GetStamp(RuleApplicationDef source)
+        public string GetKey(RuleApplicationDef source)
         {
-            return MakeStamp(source);
+            return MakeKey(source);
         }
         internal string GetTmpPath()
         {
             return Path.GetTempPath() + Guid.NewGuid() + ".ruleappx";
         }
-        internal string MakeStamp(RuleApplicationDef source)
+        internal string MakeKey(RuleApplicationDef source)
         {
             return source.Name + "," + source.Revision + "," + source.Guid;
-        }
-        internal void MakeStamp()
-        {
-            _stamp = MakeStamp(_source);
         }
         public void StoreSourceRuleapp(RuleApplicationDef source, RuleApplicationDef dest)
         {
@@ -109,12 +155,12 @@ namespace InRule.Labs.Toolkit.Shared
             source.SaveToFile(tmp);
             string file = EncodeFile(tmp);
             //Store in target attribute with stamp
-            string stamp = MakeStamp(source);
-            StoreFileInAttribute(file, stamp, dest);
+            string key = MakeKey(source);
+            StoreFileInAttribute(file, key, dest);
         }
         internal void StoreFileInAttribute(string file, string key, RuleApplicationDef dest)
         {
-            dest.Attributes.Default.Add(key, file);
+            dest.Attributes.Default.Add("Toolkit:" + key, file);
         }
         internal string EncodeFile(string path)
         {
@@ -143,7 +189,7 @@ namespace InRule.Labs.Toolkit.Shared
         }
         public void RemoveSourceRuleapp(RuleApplicationDef source, RuleApplicationDef dest)
         {
-            string stamp = MakeStamp(source);
+            string stamp = "Toolkit:" + MakeKey(source);
             dest.Attributes.Default.Remove(stamp);
         }
         internal XmlSerializableStringDictionary.XmlSerializableStringDictionaryItem FindSourceAttribute(string key, RuleApplicationDef dest)
@@ -159,55 +205,65 @@ namespace InRule.Labs.Toolkit.Shared
             }
             return resultAtt;
         }
-        internal void Import()
+        internal void Import(RuleApplicationDef source, RuleApplicationDef dest)
         {
-            PullEntities();
-            PullRulesets();
+            ImportEntities(source, dest);
+            ImportRulesets(source, dest);
         }
-        internal void Remove()
+        internal void Remove(RuleApplicationDef dest, string key)
         {
-            CleanEntities();
-            CleanRulesets();
+            CleanEntities(dest, key);
+            CleanRulesets(dest, key);
         }
-        internal void PullEntities()
+        
+        internal void ImportEntities(RuleApplicationDef source, RuleApplicationDef dest)
         {
-            foreach (RuleRepositoryDefBase entityDef in _source.Entities)
+            string key = MakeKey(source);
+            foreach (RuleRepositoryDefBase entityDef in source.Entities)
             {
-                ProcessRulesetChildren(entityDef);
-                _dest.Entities.Add(entityDef.CopyWithSameGuids());
+                ProcessChildren(entityDef, key);
+                dest.Entities.Add(entityDef.CopyWithSameGuids());
             }
         }
-        internal void PullRulesets()
+        
+        internal void ImportRulesets(RuleApplicationDef source, RuleApplicationDef dest)
         {
-            foreach (RuleRepositoryDefBase rulesetDef in _source.RuleSets)
+            string key = MakeKey(source);
+            foreach (RuleRepositoryDefBase rulesetDef in source.RuleSets)
             {
-                ProcessRulesetChildren(rulesetDef);
-                _dest.RuleSets.Add(rulesetDef.CopyWithSameGuids());
+                ProcessChildren(rulesetDef, key);
+                dest.RuleSets.Add(rulesetDef.CopyWithSameGuids());
             }
         }
-        internal void CleanEntities()
+        internal void CleanEntities(RuleApplicationDef dest, string key)
         {
-            foreach (EntityDef entityDef in _dest.Entities.ToList<EntityDef>())
+            foreach (EntityDef entityDef in dest.Entities.ToList<EntityDef>())
             {
-                if (IsToolkitMatch(entityDef))
+                if (IsToolkitMatch(entityDef, key))
                 {
-                    _dest.Entities.Remove(entityDef);
+                    dest.Entities.Remove(entityDef);
                 }
             }
         }
-        internal void CleanRulesets()
+        internal void CleanRulesets(RuleApplicationDef dest, string key)
         {
-            foreach (RuleRepositoryDefBase rulesetDef in _dest.RuleSets.ToList<RuleRepositoryDefBase>())
+            foreach (RuleRepositoryDefBase rulesetDef in dest.RuleSets.ToList<RuleRepositoryDefBase>())
             {
-                if (IsToolkitMatch(rulesetDef))
+                if (IsToolkitMatch(rulesetDef,key))
                 {
-                    _dest.RuleSets.Remove(rulesetDef);
+                    dest.RuleSets.Remove(rulesetDef);
                 }
             }
         }
-        internal void ProcessRulesetChildren(RuleRepositoryDefBase child)
+
+        internal void ProcessChildren(RuleRepositoryDefBase child, string key)
         {
-            StampWithAttribute(child);
+            ProcessChildren(child, null,key);
+        }
+        internal void ProcessChildren(RuleRepositoryDefBase child, ObservableCollection<RuleRepositoryDefBase> list, string key)
+        {
+            StampAttribute(child,key);
+            list?.Add(child);
             var collquery = from childcollections in child.GetAllChildCollections()
                             select childcollections;
             foreach (RuleRepositoryDefCollection defcollection in collquery)
@@ -215,17 +271,18 @@ namespace InRule.Labs.Toolkit.Shared
                 var defquery = from RuleRepositoryDefBase items in defcollection select items;
                 foreach (var def in defquery)
                 {
-                    ProcessRulesetChildren(def);
+                    ProcessChildren(def, list, key);
                 }
             } 
         }
-        internal void StampWithAttribute(RuleRepositoryDefBase def)
+
+        internal void StampAttribute(RuleRepositoryDefBase def, string key)
         {
             Debug.WriteLine(def.Name);
             //if for whatever reason it's already been stamped
-            if (IsToolkitMatch(def) == false)
+            if (IsToolkitMatch(def, key) == false)
             {
-                def.Attributes.Default.Add("Toolkit", _stamp);
+                def.Attributes.Default.Add("Toolkit", key);
             }
         }
     }
