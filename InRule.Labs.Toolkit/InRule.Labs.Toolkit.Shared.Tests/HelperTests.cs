@@ -21,6 +21,10 @@ namespace InRule.Labs.Toolkit.Shared.Tests
 
         private string _destPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory.Substring(0,
             AppDomain.CurrentDomain.BaseDirectory.IndexOf("bin")), @"Ruleapps\", "DestRuleApplication.ruleappx");
+        
+        /*private string _destPathBase = Path.Combine(AppDomain.CurrentDomain.BaseDirectory.Substring(0,
+           AppDomain.CurrentDomain.BaseDirectory.IndexOf("bin")), @"Ruleapps\", "DestRuleApplication");
+           */
 
         [Test]
         public void MakeTempPathTest()
@@ -70,12 +74,23 @@ namespace InRule.Labs.Toolkit.Shared.Tests
             Helper h = new Helper();
             RuleApplicationDef source = RuleApplicationDef.Load(_sourcePath);
             RuleApplicationDef dest = RuleApplicationDef.Load(_destPath);
-            h.ImportArtifacts(source,dest);
+            h.ImportToolkit(source,dest);
             Assert.IsTrue(source.Entities.Count == dest.Entities.Count);
+            Assert.IsTrue(source.EndPoints.Count == dest.EndPoints.Count);
+            Assert.IsTrue(source.UdfLibraries.Count == dest.UdfLibraries.Count);
+            Assert.IsTrue(source.Categories.Count == dest.Categories.Count);
+            Assert.IsTrue(source.DataElements.Count == dest.DataElements.Count);
             Assert.IsTrue(source.RuleSets.Count == dest.RuleSets.Count);
-            h.RemoveArtifacts(source,dest);
+            string path = AppDomain.CurrentDomain.BaseDirectory + "\\Ruleapps\\dest_" + Guid.NewGuid() + ".ruleappx";
+            dest.SaveToFile(path);
+
+            h.RemoveToolkit(source,dest);
             Assert.IsTrue(dest.Entities.Count == 0); //all imported entities are gone
             Assert.IsTrue(dest.RuleSets.Count == 0); //all imported RuleSets are gone
+            Assert.IsTrue(dest.EndPoints.Count == 0); //all endpoints are gone
+            Assert.IsTrue(dest.Categories.Count == 0); //all categories are gone
+            Assert.IsTrue(dest.DataElements.Count == 0); //all data elements are gone
+            Assert.IsTrue(dest.UdfLibraries.Count == 0);  //All udfs are gone
             Assert.IsTrue(dest.Attributes.Default.Count == 0);  //the base 64 encoded source ruleapp is removed
         }
 
@@ -85,8 +100,9 @@ namespace InRule.Labs.Toolkit.Shared.Tests
             Helper h = new Helper();
             RuleApplicationDef source = RuleApplicationDef.Load(_sourcePath);
             RuleApplicationDef dest = RuleApplicationDef.Load(_destPath);
-            h.ImportArtifacts(source, dest);
+            h.ImportToolkit(source, dest);
             ObservableCollection<ToolkitContents> toolkits = h.GetToolkits(dest);
+            Console.WriteLine("Toolkits Count: " + toolkits[0].Contents.Count);
             Assert.NotNull(toolkits);
             Assert.AreEqual(toolkits[0].Name,source.Name);
             Assert.AreEqual(toolkits[0].Revision, source.Revision.ToString());
@@ -98,10 +114,10 @@ namespace InRule.Labs.Toolkit.Shared.Tests
             Helper h = new Helper();
             RuleApplicationDef source = RuleApplicationDef.Load(_sourcePath);
             RuleApplicationDef dest = RuleApplicationDef.Load(_destPath);
-            h.ImportArtifacts(source, dest);
+            h.ImportToolkit(source, dest);
             try
             {
-                h.ImportArtifacts(source, dest);
+                h.ImportToolkit(source, dest);
                 Assert.Fail("Expected an exception from adding a duplicate");
             }
             catch (Exception ex)
@@ -111,8 +127,5 @@ namespace InRule.Labs.Toolkit.Shared.Tests
                 Assert.Pass("Threw an expected exception");
             }
         }
-
-
-
     }
 }
