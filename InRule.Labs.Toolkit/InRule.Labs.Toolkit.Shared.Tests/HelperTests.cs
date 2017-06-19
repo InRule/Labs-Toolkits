@@ -69,7 +69,7 @@ namespace InRule.Labs.Toolkit.Shared.Tests
         }
 
         [Test]
-        public void IntegrationTests()
+        public void ToolkitIntegrationTests()
         {
             Helper h = new Helper();
             RuleApplicationDef source = RuleApplicationDef.Load(_sourcePath);
@@ -92,6 +92,22 @@ namespace InRule.Labs.Toolkit.Shared.Tests
             Assert.IsTrue(dest.DataElements.Count == 0); //all data elements are gone
             Assert.IsTrue(dest.UdfLibraries.Count == 0);  //All udfs are gone
             Assert.IsTrue(dest.Attributes.Default.Count == 0);  //the base 64 encoded source ruleapp is removed
+        }
+        [Test]
+        public void ImportRuleAppIntegrationTests()
+        {
+            Helper h = new Helper();
+            RuleApplicationDef source = RuleApplicationDef.Load(_sourcePath);
+            RuleApplicationDef dest = RuleApplicationDef.Load(_destPath);
+            h.ImportRuleApp(source, dest);
+            Assert.IsTrue(source.Entities.Count == dest.Entities.Count);
+            Assert.IsTrue(source.EndPoints.Count == dest.EndPoints.Count);
+            Assert.IsTrue(source.UdfLibraries.Count == dest.UdfLibraries.Count);
+            Assert.IsTrue(source.Categories.Count == dest.Categories.Count);
+            Assert.IsTrue(source.DataElements.Count == dest.DataElements.Count);
+            Assert.IsTrue(source.RuleSets.Count == dest.RuleSets.Count);
+            string path = AppDomain.CurrentDomain.BaseDirectory + "\\Ruleapps\\dest_import_only_" + Guid.NewGuid() + ".ruleappx";
+            dest.SaveToFile(path);
         }
 
         [Test]

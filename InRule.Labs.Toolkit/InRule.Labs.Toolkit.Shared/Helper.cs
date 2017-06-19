@@ -36,7 +36,7 @@ namespace InRule.Labs.Toolkit.Shared
             return toolkits;
         }
         
-        internal bool Exists(RuleApplicationDef source, RuleApplicationDef dest)
+        internal bool ToolkitExists(RuleApplicationDef source, RuleApplicationDef dest)
         {
             bool exists = false;
             foreach (XmlSerializableStringDictionary.XmlSerializableStringDictionaryItem att in dest.Attributes.Default)
@@ -68,13 +68,34 @@ namespace InRule.Labs.Toolkit.Shared
             GetAll(source, list);
             return list;
         }
+        public void ImportRuleApp(RuleApplicationDef source, RuleApplicationDef dest)
+        {
+            Import(source, dest, false);
+        }
+        public void ImportRuleApp(RuleApplicationDef source, RuleApplicationDef dest, string savePath)
+        {
+            ImportRuleApp(source, dest);
+            dest.SaveToFile(savePath);
+        }
+        public void ImportRuleApp(string sourceRuleappPath, string destRuleappPath)
+        {
+            try
+            {
+                ImportRuleApp(RuleApplicationDef.Load(sourceRuleappPath),
+                    RuleApplicationDef.Load(destRuleappPath), destRuleappPath);
+            }
+            catch (Exception ex)
+            {
+                Debug.WriteLine(ex.Message + ex.StackTrace + ex.InnerException);
+            }
+        }
         public void ImportToolkit(RuleApplicationDef source, RuleApplicationDef dest)
         {
-            if (Exists(source, dest))
+            if (ToolkitExists(source, dest))
             {
                 throw new DuplicateToolkitException("Toolkit already exists in the destination rule application.");
             }
-            Import(source, dest);
+            Import(source, dest, true);
             StoreSourceRuleapp(source,dest);
         }
         public void ImportToolkit(RuleApplicationDef source, RuleApplicationDef dest, string savePath)
@@ -199,10 +220,13 @@ namespace InRule.Labs.Toolkit.Shared
             }
             return resultAtt;
         }
-        internal void Import(RuleApplicationDef source, RuleApplicationDef dest)
+        internal void Import(RuleApplicationDef source, RuleApplicationDef dest, bool toolkit)
         {
             string key = MakeKey(source);
-            GetAll(source);  //stamps source artifacts with an attribute containing a toolkit key
+            if (toolkit == true)
+            {
+                GetAll(source);  //stamps source artifacts with an attribute containing a toolkit key
+            }
             //import entities
             foreach (RuleRepositoryDefBase entityDef in source.Entities)
             {
