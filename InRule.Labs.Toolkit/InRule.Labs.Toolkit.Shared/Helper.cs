@@ -75,16 +75,20 @@ namespace InRule.Labs.Toolkit.Shared
             GetAll(source, list);
             return list;
         }
+        internal void ValidateImport(RuleApplicationDef dest)
+        {
+            if (dest.Validate().Count != 0)
+            {
+                throw new InvalidImportException("The import you just attempted is not valid.");
+            }
+        }
         /// <summary>
         /// Gerneral import for ruleaps off the filesystem.
         /// </summary>
         public void ImportRuleApp(RuleApplicationDef source, RuleApplicationDef dest)
         {
             Import(source, dest, false);
-            if (dest.Validate().Count != 0)
-            {
-                throw new InvalidImportException("The import you just attempted is not valid.");
-            }
+            ValidateImport(dest);
         }
         public void ImportRuleApp(RuleApplicationDef source, RuleApplicationDef dest, string savePath)
         {
@@ -113,10 +117,7 @@ namespace InRule.Labs.Toolkit.Shared
                 throw new DuplicateToolkitException("Toolkit already exists in the destination rule application.");
             }
             Import(source, dest, true);
-            if (dest.Validate().Count != 0)
-            {
-                throw new InvalidImportException("The import of the toolkit you just attempted is not valid.");
-            }
+            ValidateImport(dest);
             StoreSourceRuleapp(source,dest);
         }
         public void ImportToolkit(RuleApplicationDef source, RuleApplicationDef dest, string savePath)
