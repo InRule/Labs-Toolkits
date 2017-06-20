@@ -143,5 +143,37 @@ namespace InRule.Labs.Toolkit.Shared.Tests
                 Assert.Pass("Threw an expected exception");
             }
         }
+        [Test]
+        public void DuplicateEntityNameTest()
+        {
+            Helper h = new Helper();
+            RuleApplicationDef source = RuleApplicationDef.Load(_sourcePath);
+            RuleApplicationDef dest = RuleApplicationDef.Load(_destPath);
+            EntityDef entity = new EntityDef();
+            EntityDef entity2 = new EntityDef();
+            entity.Name = "HelloWorld";
+            entity.Name = "HelloWorld";
+            source.Entities.Add(entity);
+            dest.Entities.Add(entity2);
+
+
+            try
+            {
+                h.ImportToolkit(source, dest);
+                Assert.Fail("Expected InvalidImportException.");
+            }
+            catch (Exception ex)
+            {
+                if (ex.GetType().ToString().Contains("InvalidImportException"))
+                {
+                    Assert.Pass("Got the expected exception");
+                }
+                else
+                {
+                    Assert.Fail("Did not get the expected exception.  Instead got: " + ex.GetType().ToString());
+                }
+               
+            }
+        }
     }
 }

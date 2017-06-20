@@ -15,10 +15,17 @@ using InRule.Labs.Toolkit.Shared.Model;
 
 namespace InRule.Labs.Toolkit.Shared
 {
-    
+    /// <summary>
+    /// Utility class suitable for all/or nothing import of toolkits and other ruleapps.
+    /// </summary>
     public class Helper
     {
+        //TODO: Refactor this member variable for thread safety
         private string _importHash = ""; //prevents duplicate import
+
+        /// <summary>
+        /// Returns a bindable collection for a XAML control.
+        /// </summary>
         public ObservableCollection<ToolkitContents> GetToolkits(RuleApplicationDef dest)
         {
             ObservableCollection <ToolkitContents> toolkits = new ObservableCollection<ToolkitContents>();
@@ -68,9 +75,16 @@ namespace InRule.Labs.Toolkit.Shared
             GetAll(source, list);
             return list;
         }
+        /// <summary>
+        /// Gerneral import for ruleaps off the filesystem.
+        /// </summary>
         public void ImportRuleApp(RuleApplicationDef source, RuleApplicationDef dest)
         {
             Import(source, dest, false);
+            if (dest.Validate().Count != 0)
+            {
+                throw new InvalidImportException("The import you just attempted is not valid.");
+            }
         }
         public void ImportRuleApp(RuleApplicationDef source, RuleApplicationDef dest, string savePath)
         {
@@ -89,6 +103,9 @@ namespace InRule.Labs.Toolkit.Shared
                 Debug.WriteLine(ex.Message + ex.StackTrace + ex.InnerException);
             }
         }
+        /// <summary>
+        /// Import a Rule Application as a toolkit off the filesystem.
+        /// </summary>
         public void ImportToolkit(RuleApplicationDef source, RuleApplicationDef dest)
         {
             if (ToolkitExists(source, dest))
@@ -96,6 +113,10 @@ namespace InRule.Labs.Toolkit.Shared
                 throw new DuplicateToolkitException("Toolkit already exists in the destination rule application.");
             }
             Import(source, dest, true);
+            if (dest.Validate().Count != 0)
+            {
+                throw new InvalidImportException("The import of the toolkit you just attempted is not valid.");
+            }
             StoreSourceRuleapp(source,dest);
         }
         public void ImportToolkit(RuleApplicationDef source, RuleApplicationDef dest, string savePath)
@@ -115,6 +136,9 @@ namespace InRule.Labs.Toolkit.Shared
                 Debug.WriteLine(ex.Message + ex.StackTrace + ex.InnerException);
             }
         }
+        /// <summary>
+        /// Remove a imported toolkit from a Rule Application.
+        /// </summary>
         public void RemoveToolkit(RuleApplicationDef source, RuleApplicationDef dest)
         {
             string key = MakeKey(source);
@@ -138,6 +162,9 @@ namespace InRule.Labs.Toolkit.Shared
                 Debug.WriteLine(ex.Message + ex.StackTrace + ex.InnerException);
             }
         }
+        /// <summary>
+        /// Check if a specific ruleapp matches a key hash (Name,Revision,GUID).
+        /// </summary>
         public bool IsToolkitMatch(RuleRepositoryDefBase def, string key)
         {
             var isMatch = false;
@@ -151,6 +178,9 @@ namespace InRule.Labs.Toolkit.Shared
             }
             return isMatch;
         }
+        /// <summary>
+        /// Returns a key hash for a given Rule Application (Name,Revision,GUID).
+        /// </summary>
         public string GetKey(RuleApplicationDef source)
         {
             return MakeKey(source);
@@ -163,7 +193,7 @@ namespace InRule.Labs.Toolkit.Shared
         {
             return source.Name + "," + source.Revision + "," + source.Guid;
         }
-        public void StoreSourceRuleapp(RuleApplicationDef source, RuleApplicationDef dest)
+        internal void StoreSourceRuleapp(RuleApplicationDef source, RuleApplicationDef dest)
         {
             //Save temporarily to the filesystem
             string tmp = GetTmpPath();
@@ -188,6 +218,9 @@ namespace InRule.Labs.Toolkit.Shared
             byte[] bytes = Convert.FromBase64String(file);
             File.WriteAllBytes(path, bytes);
         }
+        /// <summary>
+        /// Extracts a specific toolkit from a Rule Application.
+        /// </summary>
         public RuleApplicationDef  GetSourceRuleapp(string key, RuleApplicationDef dest)
         {
             RuleApplicationDef def = null;
@@ -202,7 +235,7 @@ namespace InRule.Labs.Toolkit.Shared
             }
             return def;
         }
-        public void RemoveSourceRuleapp(RuleApplicationDef source, RuleApplicationDef dest)
+        internal void RemoveSourceRuleapp(RuleApplicationDef source, RuleApplicationDef dest)
         {
             string stamp = "Toolkit:" + MakeKey(source);
             dest.Attributes.Default.Remove(stamp);
@@ -229,7 +262,7 @@ namespace InRule.Labs.Toolkit.Shared
             }
             //import entities
             foreach (RuleRepositoryDefBase entityDef in source.Entities)
-            {
+            {  
                 dest.Entities.Add(entityDef.CopyWithSameGuids());
             }
             //import rulesets
@@ -310,14 +343,16 @@ namespace InRule.Labs.Toolkit.Shared
                 }
             }
         }
-      
         internal void ProcessChildren(RuleRepositoryDefBase child, ObservableCollection<RuleRepositoryDefBase> list, string key)
         {
             if (_importHash.Contains(child.Name) == false)
             {
                 _importHash = _importHash + child.Name;  //update the hash
                 Console.WriteLine(child.Name);
-                StampAttribute(child, key);
+                if (String.IsNullOrEmpty(key) == false)
+                {
+                    StampAttribute(child, key);
+                }
                 list?.Add(child);
                 var collquery = from childcollections in child.GetAllChildCollections()
                                 select childcollections;

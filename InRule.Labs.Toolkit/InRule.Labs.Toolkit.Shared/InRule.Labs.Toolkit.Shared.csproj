@@ -54,6 +54,7 @@
   <ItemGroup>
     <Compile Include="DuplicateToolkitException.cs" />
     <Compile Include="Helper.cs" />
+    <Compile Include="InvalidImportException.cs" />
     <Compile Include="Model\ToolkitContents.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
