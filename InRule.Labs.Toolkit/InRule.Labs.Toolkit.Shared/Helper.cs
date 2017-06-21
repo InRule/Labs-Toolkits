@@ -12,6 +12,7 @@ using InRule.Repository.Attributes;
 using InRule.Repository.RuleElements;
 using System.IO;
 using InRule.Labs.Toolkit.Shared.Model;
+using InRule.Repository.Vocabulary;
 
 namespace InRule.Labs.Toolkit.Shared
 {
@@ -291,6 +292,15 @@ namespace InRule.Labs.Toolkit.Shared
             {
                 dest.DataElements.Add(dataelement.CopyWithSameGuids());
             }
+            //import vocabulary at the ruleapp level
+            foreach (RuleRepositoryDefBase template in source.Vocabulary.Templates)
+            {
+                if (dest.Vocabulary == null)
+                {
+                    dest.Vocabulary = new VocabularyDef();
+                }
+                dest.Vocabulary.Templates.Add(template.CopyWithSameGuids());
+            }
         }
         internal void Remove(RuleApplicationDef dest, string key)
         {
@@ -344,6 +354,24 @@ namespace InRule.Labs.Toolkit.Shared
                 }
             }
         }
+        /// <summary>
+        /// It's ok to add attributes to TemplateDefs but not their children.
+        /// </summary>
+        internal bool IsSafeTemplateDef(RuleRepositoryDefBase child)
+        {
+            bool isSafe = true;
+            if (child.GetType().ToString().Contains("InRule.Repository.Vocabulary"))
+            {
+                string prefix = "InRule.Repository.Vocabulary.";
+                string longname = child.GetType().ToString();
+                string shortname = longname.Substring(prefix.Length,longname.Length - prefix.Length);
+                if (child.GetType() != typeof(TemplateDef))
+                {
+                    isSafe = false;
+                }
+            }
+            return isSafe;
+        }
         internal void ProcessChildren(RuleRepositoryDefBase child, ObservableCollection<RuleRepositoryDefBase> list, string key)
         {
             if (_importHash.Contains(child.Name) == false)
@@ -352,7 +380,10 @@ namespace InRule.Labs.Toolkit.Shared
                 Console.WriteLine(child.Name);
                 if (String.IsNullOrEmpty(key) == false)
                 {
-                    StampAttribute(child, key);
+                   if (IsSafeTemplateDef(child)) //some vocab definitions are not safe to stamp with an attribute
+                   {
+                       StampAttribute(child, key);
+                   }
                 }
                 list?.Add(child);
                 var collquery = from childcollections in child.GetAllChildCollections()
