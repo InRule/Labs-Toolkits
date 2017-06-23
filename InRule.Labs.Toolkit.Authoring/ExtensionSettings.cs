@@ -2,7 +2,7 @@
 using InRule.Authoring;
 using InRule.Authoring.Settings;
 
-namespace InRule.Labs.Toolkit.Author
+namespace InRule.Labs.Toolkit.Authoring
 {
     public class MyExtensionSettings : ISettings
     {

@@ -13,7 +13,7 @@ namespace InRule.Labs.Toolkit.Shared.Model
         private string _name;
         private string revision;
         private string _guid;
-        private ObservableCollection<RuleRepositoryDefBase> _contents;
+        private ObservableCollection<Artifact> _contents;
 
         public string Name
         {
@@ -33,7 +33,7 @@ namespace InRule.Labs.Toolkit.Shared.Model
             set { _guid = value; }
         }
 
-        public ObservableCollection<RuleRepositoryDefBase> Contents
+        public ObservableCollection<Artifact> Contents
         {
             get { return _contents; }
             set { _contents = value; }

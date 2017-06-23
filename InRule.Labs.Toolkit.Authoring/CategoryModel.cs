@@ -1,13 +1,13 @@
 ﻿using System;
 using System.Collections.ObjectModel;
 using System.Linq;
+using InRule.Authoring.Extensions;
 using InRule.Authoring.Services;
 using InRule.Authoring.Windows;
 using InRule.Repository;
 using InRule.Repository.RuleElements;
-using InRule.Authoring.Extensions;
 
-namespace InRule.Labs.Toolkit.Author
+namespace InRule.Labs.Toolkit.Authoring
 {
     public class CategoryModel
     {

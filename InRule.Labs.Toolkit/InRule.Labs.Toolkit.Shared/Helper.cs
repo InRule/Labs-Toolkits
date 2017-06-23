@@ -68,9 +68,9 @@ namespace InRule.Labs.Toolkit.Shared
             toolkit.Revision = key.Split(',')[1];
             toolkit.GUID = key.Split(',')[2];
         }
-        internal ObservableCollection<RuleRepositoryDefBase> GetToolkitContents(string key, RuleApplicationDef dest)
+        internal ObservableCollection<Artifact> GetToolkitContents(string key, RuleApplicationDef dest)
         {
-            ObservableCollection<RuleRepositoryDefBase> list = new ObservableCollection<RuleRepositoryDefBase>();
+            ObservableCollection<Artifact> list = new ObservableCollection<Artifact>();
             //unpack the source ruleappdef
             RuleApplicationDef source = this.GetSourceRuleapp("Toolkit:" + key, dest);
             GetAll(source, list);
@@ -372,7 +372,7 @@ namespace InRule.Labs.Toolkit.Shared
             }
             return isSafe;
         }
-        internal void ProcessChildren(RuleRepositoryDefBase child, ObservableCollection<RuleRepositoryDefBase> list, string key)
+        internal void ProcessChildren(RuleRepositoryDefBase child, ObservableCollection<Artifact> list, string key)
         {
             if (_importHash.Contains(child.Name) == false)
             {
@@ -385,7 +385,9 @@ namespace InRule.Labs.Toolkit.Shared
                        StampAttribute(child, key);
                    }
                 }
-                list?.Add(child);
+                Artifact a = new Artifact();
+                a.DefBase = child;
+                list?.Add(a);
                 var collquery = from childcollections in child.GetAllChildCollections()
                                 select childcollections;
                 foreach (RuleRepositoryDefCollection defcollection in collquery)
@@ -412,7 +414,7 @@ namespace InRule.Labs.Toolkit.Shared
         {
             GetAll(source, null);
         }
-        internal void GetAll(RuleApplicationDef source, ObservableCollection<RuleRepositoryDefBase> list)
+        internal void GetAll(RuleApplicationDef source, ObservableCollection<Artifact> list)
         {
             _importHash = "";  //reset
             string key = MakeKey(source);

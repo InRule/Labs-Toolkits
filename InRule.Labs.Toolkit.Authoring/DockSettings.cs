@@ -4,7 +4,7 @@ using InRule.Authoring.Services;
 using InRule.Authoring.Windows.Controls;
 using InRule.Repository;
 
-namespace InRule.Labs.Toolkit.Author
+namespace InRule.Labs.Toolkit.Authoring
 {
     class DockSettings
     {
