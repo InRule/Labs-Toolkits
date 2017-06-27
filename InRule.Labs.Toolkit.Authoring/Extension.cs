@@ -18,7 +18,7 @@ namespace InRule.Labs.Toolkit.Authoring
 {
     class Extension : ExtensionBase
     {
-        public CategoryModel _categoryModel;
+        //public CategoryModel _categoryModel;
         public Helper _helper;
         public ToolkitsContainer _toolkitscontainer;
         //public ObservableCollection<ToolkitContents> _toolkits;
@@ -37,17 +37,16 @@ namespace InRule.Labs.Toolkit.Authoring
         public override void Enable()
         {
             _helper = new Helper();
-
-
             RuleApplicationService.Opened += WhenRuleAppLoaded;
             RuleApplicationService.Closed += WhenRuleAppClosed;
             
             _ruleAppController = ServiceManager.GetService<RuleApplicationService>().Controller;
             //_ruleAppController.CategoryRemovedFromDef += WhenCategoryRemovedFromDef;
             //_ruleAppController.CategoryAddedToDef += WhenCategoryAddedToDef;
-            _ruleAppController.RuleSetAdded += WhenRuleSetAdded;
+            //_ruleAppController.RuleSetAdded += WhenRuleSetAdded;
             //_ruleAppController.CategoryAdded += WhenCategoryAdded;
             //_ruleAppController.RemovingDef += WhenDefRemoved;
+            
 
             var enableButton = RuleApplicationService.RuleApplicationDef != null;
             _showToolkitsCommand = new VisualDelegateCommand(ToggleDisplay, TOOLKITS, null, ImageFactory.GetImageAuthoringAssembly("/Images/SchemaSource32.png"), enableButton);
@@ -65,7 +64,7 @@ namespace InRule.Labs.Toolkit.Authoring
 
 	       // _ruleAppController.CategoryRemovedFromDef -= WhenCategoryRemovedFromDef;
 	      //  _ruleAppController.CategoryAddedToDef -= WhenCategoryAddedToDef;
-	        _ruleAppController.RuleSetAdded -= WhenRuleSetAdded;
+	      //  _ruleAppController.RuleSetAdded -= WhenRuleSetAdded;
 	      //  _ruleAppController.CategoryAdded -= WhenCategoryAdded;
 	      //  _ruleAppController.RemovingDef -= WhenDefRemoved;
 
@@ -99,6 +98,7 @@ namespace InRule.Labs.Toolkit.Authoring
             //Load the toolkits from the loaded ruleapp
             _toolkitscontainer = new ToolkitsContainer();
             _toolkitscontainer.Toolkits = _helper.GetToolkits(this.RuleApplicationService.RuleApplicationDef);
+            _toolkitscontainer.SelectionManager = this.SelectionManager;  //required for context passing into the model
 
             // creating an instance of the class in this manner will automatically set 
             // any properties in the class that are services that are contained in the service manager
@@ -122,8 +122,9 @@ namespace InRule.Labs.Toolkit.Authoring
                 _toolWindow.Destroy();
                 _toolWindow = null;
             }
-
-            _categoryModel = null;
+            _helper = null;
+            _toolkitscontainer = null;
+            //_categoryModel = null;
         }
 
         private void WhenRuleAppLoaded(object sender, EventArgs e)
@@ -163,6 +164,7 @@ namespace InRule.Labs.Toolkit.Authoring
             }
         }
         */
+        /*
         private void WhenRuleSetAdded(object sender, EventArgs<RuleSetDefBase> e)
         {
             if (_categoryModel != null)
@@ -170,6 +172,7 @@ namespace InRule.Labs.Toolkit.Authoring
                 _categoryModel.AddRuleSet(e.Item);
             }
         }
+        */
         /*
         private void WhenCategoryAddedToDef(object sender, ParentChildEventArgs<RuleRepositoryDefBase, string> e)
         {

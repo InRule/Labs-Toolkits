@@ -12,9 +12,14 @@
                 <HierarchicalDataTemplate DataType="{x:Type model:ToolkitContents  }" ItemsSource="{Binding Path= Contents}">
                     <StackPanel Orientation="Horizontal" Margin="0 1">
                         <Image Source="/InRule.Authoring;component/Images/Categorize16.png" Height="16" Width="16" />
-                        <TextBlock Text="{Binding Path= Name}" Margin="5,0,0,0" VerticalAlignment="Center" />
+                        <TextBlock Text="{Binding Path=Name}" Margin="5,0,0,0" VerticalAlignment="Center" />
+                        <TextBlock Text="-" Margin="5,0,0,0" VerticalAlignment="Center" />
+                        <TextBlock Text="r" Margin="5,0,0,0" VerticalAlignment="Center" />
+                        <TextBlock Text="{Binding Path=Revision}" Margin="0,0,0,0" VerticalAlignment="Center" />
+                        <TextBlock Text="(" Margin="5,0,0,0" VerticalAlignment="Center" />
+                        <TextBlock Text="{Binding Path=Contents.Count}" Margin="0,0,0,0" VerticalAlignment="Center" />
+                        <TextBlock Text=")" Margin="0,0,0,0" VerticalAlignment="Center" />
                     </StackPanel>
-
                 </HierarchicalDataTemplate>
                 <DataTemplate DataType="{x:Type  model:Artifact}">
                     <StackPanel Orientation="Horizontal" Margin="0 1">

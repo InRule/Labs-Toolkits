@@ -68,7 +68,6 @@
     <Reference Include="WindowsBase" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="CategoryModel.cs" />
     <Compile Include="DockSettings.cs" />
     <Compile Include="Extension.cs" />
     <Compile Include="ExtensionSettings.cs" />

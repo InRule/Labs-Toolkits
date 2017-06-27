@@ -1,5 +1,8 @@
-﻿using System.Windows;
+﻿using System;
+using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
+using InRule.Authoring.Services;
 using InRule.Labs.Toolkit.Shared;
 using InRule.Labs.Toolkit.Shared.Model;
 using InRule.Repository;
@@ -11,17 +14,19 @@ namespace InRule.Labs.Toolkit.Authoring
     /// </summary>
     public partial class ToolkitTree : UserControl
     {
-        public ToolkitTree(ToolkitsContainer toolkitscontainer)
+        
+        public ToolkitTree(ToolkitsContainer toolkitsContainer)
         {
             InitializeComponent();
+            DataContext = toolkitsContainer;
 
-            DataContext = toolkitscontainer;
         }
 
         private void SelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
         {
             // set selected item
-            //((CategoryModel) DataContext).SelectedItem = e.NewValue;
+            ((ToolkitsContainer)DataContext).SelectedItem = e.NewValue;
         }
+        
     }
 }
