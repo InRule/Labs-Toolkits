@@ -32,6 +32,7 @@ namespace InRule.Labs.Toolkit.Shared.Model
                     {
                         _selectedItem = item.DefBase;
                         SelectionManager.SelectedItem = item.DefBase;
+                        ((RuleRepositoryDefBase)SelectionManager.SelectedItem).CatalogState = CatalogState.CheckedIn;
                     }
                 }
                 catch (Exception ex)
@@ -39,6 +40,44 @@ namespace InRule.Labs.Toolkit.Shared.Model
                     MessageBoxFactory.Show("Error trying to set selected item: " + value.ToString() + Environment.NewLine + ex.ToString(), "Error in setting selected item", MessageBoxFactoryImage.Error);
                 }
             }
+        }
+        /// <summary>
+        /// Gets a specific definition from any toolkit 
+        /// </summary>
+        public RuleRepositoryDefBase GetDef(Guid guid)
+        {
+            RuleRepositoryDefBase resultdef = null;
+            foreach (var toolkit in _toolkits)
+            {
+                foreach (Artifact def in toolkit.Contents)
+                {
+                    if (def.DefBase.Guid.Equals(guid))
+                    {
+                        resultdef = def.DefBase;
+                        break;
+                    }
+                }
+                if (resultdef != null)
+                {
+                    break; //got a hit
+                }
+            }
+            return resultdef;
+        }
+
+        public bool IsToolkit(RuleRepositoryDefBase def)
+        {
+            bool result = false;
+            Helper h = new Helper();
+            foreach (ToolkitContents toolkit in _toolkits)
+            {
+                if (h.IsToolkitMatch(def, toolkit.GetKey()))
+                {
+                    result = true;
+                    break;
+                }
+            }
+            return result;
         }
 
 

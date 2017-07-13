@@ -22,8 +22,8 @@ namespace InRule.Labs.Toolkit.Shared
     public class Helper
     {
         //TODO: Refactor this member variable for thread safety
-        private string _importHash = ""; //prevents duplicate import
-
+       // private string _importHash = ""; //prevents duplicate import
+        
         /// <summary>
         /// Returns a bindable collection for a XAML control.
         /// </summary>
@@ -61,7 +61,7 @@ namespace InRule.Labs.Toolkit.Shared
             }
             return exists;
         }
-        
+
         internal void ParseKey(string key, ToolkitContents toolkit)
         {
             toolkit.Name = key.Split(',')[0];
@@ -193,7 +193,11 @@ namespace InRule.Labs.Toolkit.Shared
         }
         internal string MakeKey(RuleApplicationDef source)
         {
-            return source.Name + "," + source.Revision + "," + source.Guid;
+            return MakeKey(source.Name, source.Revision.ToString(), source.Guid.ToString());
+        }
+        internal string MakeKey(string name, string revision, string guid)
+        {
+            return name + "," + revision + "," + guid;
         }
         internal void StoreSourceRuleapp(RuleApplicationDef source, RuleApplicationDef dest)
         {
@@ -304,7 +308,7 @@ namespace InRule.Labs.Toolkit.Shared
         }
         internal void Remove(RuleApplicationDef dest, string key)
         {
-           
+            
             //remove entities
             foreach (EntityDef entity in dest.Entities.ToList<RuleRepositoryDefBase>())
             {
@@ -372,34 +376,7 @@ namespace InRule.Labs.Toolkit.Shared
             }
             return isSafe;
         }
-        internal void ProcessChildren(RuleRepositoryDefBase child, ObservableCollection<Artifact> list, string key)
-        {
-            if (_importHash.Contains(child.Name) == false)
-            {
-                _importHash = _importHash + child.Name;  //update the hash
-                Console.WriteLine(child.Name);
-                if (String.IsNullOrEmpty(key) == false)
-                {
-                   if (IsSafeTemplateDef(child)) //some vocab definitions are not safe to stamp with an attribute
-                   {
-                       StampAttribute(child, key);
-                   }
-                }
-                Artifact a = new Artifact();
-                a.DefBase = child;
-                list?.Add(a);
-                var collquery = from childcollections in child.GetAllChildCollections()
-                                select childcollections;
-                foreach (RuleRepositoryDefCollection defcollection in collquery)
-                {
-                    var defquery = from RuleRepositoryDefBase items in defcollection select items;
-                    foreach (var def in defquery)
-                    {
-                        ProcessChildren(def, list, key);
-                    }
-                }
-            }
-        }
+       
         internal void StampAttribute(RuleRepositoryDefBase def, string key)
         {
             Debug.WriteLine(def.Name);
@@ -416,16 +393,66 @@ namespace InRule.Labs.Toolkit.Shared
         }
         internal void GetAll(RuleApplicationDef source, ObservableCollection<Artifact> list)
         {
-            _importHash = "";  //reset
-            string key = MakeKey(source);
-            RuleRepositoryDefCollection[] colls = source.GetAllChildCollections();
-            foreach (RuleRepositoryDefCollection coll in colls)
+           // _importHash = "";  //reset
+            if (source != null)
             {
-                foreach (RuleRepositoryDefBase def in coll)
+                string key = MakeKey(source);
+                foreach (RuleRepositoryDefBase def in source.AsEnumerable())
                 {
-                        ProcessChildren(def, list, key);
+                    ProcessDef(def, list, key);
+                }
+                foreach (RuleRepositoryDefBase def in source.Categories)
+                {
+                    ProcessDef(def,list,key);
                 }
             }
+        }
+
+        internal void ProcessDef(RuleRepositoryDefBase def, ObservableCollection<Artifact> list, string key)
+        {
+            if (IsSafeTemplateDef(def)) //some vocab definitions are not safe to stamp with an attribute
+            {
+                StampAttribute(def, key);
+            }
+            if (list != null)
+            {
+                Artifact a = new Artifact();
+                a.DefBase = def;
+                list?.Add(a);
+            }
+        }
+        /// <summary>
+        /// Deep search of a ruleapp for a specific def
+        /// </summary>
+        public RuleRepositoryDefBase FindDefDeep(RuleApplicationDef ruleapp, string guid)
+        {
+            RuleRepositoryDefBase found = null;
+            if( (ruleapp != null) && (String.IsNullOrEmpty(guid) == false))
+            {
+                foreach (RuleRepositoryDefBase def in ruleapp.AsEnumerable())
+                {
+                    if (def.Guid.ToString().Equals(guid))
+                    {
+                        //Console.WriteLine("Found....");
+                        found = def;
+                        break;
+                    }
+                }
+                //If we did not get a hit, let's look at category
+                if (found == null)
+                {
+                    foreach (RuleRepositoryDefBase def in ruleapp.Categories)
+                    {
+                        if (def.Guid.ToString().Equals(guid))
+                        {
+                            //Console.WriteLine("Found....");
+                            found = def;
+                            break;
+                        }
+                    }
+                }
+            }
+            return found;
         }
     }
 }

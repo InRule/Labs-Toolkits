@@ -175,5 +175,36 @@ namespace InRule.Labs.Toolkit.Shared.Tests
                
             }
         }
+
+        [Test]
+        public void TestGetDef()
+        {
+            Helper h = new Helper();
+            RuleApplicationDef source = RuleApplicationDef.Load(_sourcePath);
+            RuleApplicationDef dest = RuleApplicationDef.Load(_destPath);
+            EntityDef entity = new EntityDef();
+            entity.Name = "HelloWorld";
+            source.Entities.Add(entity);
+            h.ImportToolkit(source, dest);
+            ToolkitsContainer  tc = new ToolkitsContainer();
+            tc.Toolkits = h.GetToolkits(dest);
+            RuleRepositoryDefBase def = tc.GetDef(entity.Guid);
+            Assert.IsNotNull(def);
+            def = tc.GetDef(Guid.NewGuid());
+            Assert.IsNull(def); //should return null becuase it's not there
+        }
+
+        [Test]
+        public void TestDeepFindDef()
+        {
+            Helper h = new Helper();
+            RuleApplicationDef source = RuleApplicationDef.Load(_sourcePath);
+            RuleApplicationDef dest = RuleApplicationDef.Load(_destPath);
+            h.ImportToolkit(source, dest);
+            RuleRepositoryDefBase found = h.FindDefDeep(dest, "ece7c19a-f8c1-4212-9cc2-90f6dcf837cf");
+            Assert.NotNull(found);
+        }
+     
+
     }
 }
