@@ -17,4 +17,5 @@ namespace InRule.Labs.Toolkit.Shared.Model
             set { _defBase = value; }
         }
     }
+
 }

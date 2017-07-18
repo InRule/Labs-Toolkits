@@ -24,8 +24,25 @@ namespace InRule.Labs.Toolkit.Authoring
 
         private void SelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e)
         {
+            if (IsSelecting) return;
             // set selected item
             ((ToolkitsContainer)DataContext).SelectedItem = e.NewValue;
+        }
+
+        public bool IsSelecting = false;
+      
+        public void SelectArtifact(Artifact artifact)
+        {
+            IsSelecting = true;
+            var treenode = this.ArtifactTree.ContainerFromItem(artifact);
+            if (treenode != null)
+            {
+                treenode.IsSelected = true;
+                treenode.IsExpanded = true;
+                treenode.BringIntoView();
+               
+            }
+            IsSelecting = false;
         }
         
     }

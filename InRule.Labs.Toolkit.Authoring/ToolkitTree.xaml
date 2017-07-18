@@ -7,7 +7,7 @@
              mc:Ignorable="d" 
              d:DesignHeight="300" d:DesignWidth="300">
     <Grid>
-        <TreeView ItemsSource="{Binding Path=Toolkits}" SelectedItemChanged="SelectedItemChanged">
+        <TreeView Name="ArtifactTree" ItemsSource="{Binding Path=Toolkits}" SelectedItemChanged="SelectedItemChanged" >
             <TreeView.Resources>
                 <HierarchicalDataTemplate DataType="{x:Type model:ToolkitContents  }" ItemsSource="{Binding Path= Contents}">
                     <StackPanel Orientation="Horizontal" Margin="0 1">

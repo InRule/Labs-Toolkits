@@ -27,6 +27,7 @@ namespace InRule.Labs.Toolkit.Shared.Model
                     if (item != null)
                     {
                         _selectedItem = item.DefBase;
+                        
                         SelectionManager.SelectedItem = item.DefBase;
                         ((RuleRepositoryDefBase)SelectionManager.SelectedItem).CatalogState = CatalogState.CheckedIn;
                     }

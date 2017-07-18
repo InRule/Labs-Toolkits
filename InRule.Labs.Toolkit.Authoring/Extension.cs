@@ -15,6 +15,7 @@ using InRule.Authoring;
 using InRule.Labs.Toolkit.Shared;
 using InRule.Labs.Toolkit.Shared.Model;
 
+
 namespace InRule.Labs.Toolkit.Authoring
 {
     class Extension : ExtensionBase
@@ -66,7 +67,9 @@ namespace InRule.Labs.Toolkit.Authoring
                         {
                             Debug.WriteLine("This selected item is in a toolkit....");
                             ShowToolWindow();
-                            //Guid guid = ((RuleRepositoryDefBase) item).Guid;
+                            Guid guid = ((RuleRepositoryDefBase) item).Guid;
+                            Artifact a = _toolkitscontainer.GetArtifact(guid);
+                            _tree.SelectArtifact(a);
                             //ToolkitsContainer.SetSelectedItem(this._toolWindow.);
 
                         }
@@ -107,15 +110,16 @@ namespace InRule.Labs.Toolkit.Authoring
             }
         }
 
+        private ToolkitTree _tree;
         private void ShowToolWindow()
         {
             if (_toolWindow != null)
                 return;
           
-            var tree = ServiceManager.Compose<ToolkitTree>(_toolkitscontainer);
+            _tree = ServiceManager.Compose<ToolkitTree>(_toolkitscontainer);
 
             // to do as tool window
-            _toolWindow = IrAuthorShell.AddToolWindow(tree, "ToolkitTree", "Toolkits", false);
+            _toolWindow = IrAuthorShell.AddToolWindow(_tree, "ToolkitTree", "Toolkits", false);
             _toolWindow.Dock(DockDirection.Right);
             _toolWindow.Closed += WhenToolwindowClosed;
 
