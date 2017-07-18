@@ -1,9 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using InRule.Authoring.Services;
 using InRule.Authoring.Windows;
 using InRule.Repository;
@@ -46,23 +42,30 @@ namespace InRule.Labs.Toolkit.Shared.Model
         /// </summary>
         public RuleRepositoryDefBase GetDef(Guid guid)
         {
-            RuleRepositoryDefBase resultdef = null;
+            return GetArtifact(guid).DefBase;
+        }
+        /// <summary>
+        /// Gets a specific Artifact from any toolkit 
+        /// </summary>
+        public Artifact GetArtifact(Guid guid)
+        {
+            Artifact artifact = null;
             foreach (var toolkit in _toolkits)
             {
-                foreach (Artifact def in toolkit.Contents)
+                foreach (Artifact art in toolkit.Contents)
                 {
-                    if (def.DefBase.Guid.Equals(guid))
+                    if (art.DefBase.Guid.Equals(guid))
                     {
-                        resultdef = def.DefBase;
+                        artifact = art;
                         break;
                     }
                 }
-                if (resultdef != null)
+                if (artifact != null)
                 {
                     break; //got a hit
                 }
             }
-            return resultdef;
+            return artifact;
         }
 
         public bool IsToolkit(RuleRepositoryDefBase def)
@@ -79,6 +82,7 @@ namespace InRule.Labs.Toolkit.Shared.Model
             }
             return result;
         }
+       
 
 
     }

@@ -65,6 +65,9 @@ namespace InRule.Labs.Toolkit.Authoring
                         if (_toolkitscontainer.IsToolkit((RuleRepositoryDefBase)item))
                         {
                             Debug.WriteLine("This selected item is in a toolkit....");
+                            ShowToolWindow();
+                            //Guid guid = ((RuleRepositoryDefBase) item).Guid;
+                            //ToolkitsContainer.SetSelectedItem(this._toolWindow.);
 
                         }
                     }
