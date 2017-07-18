@@ -23,7 +23,7 @@ namespace InRule.Labs.Toolkit.Authoring
         public Helper _helper;
         public ToolkitsContainer _toolkitscontainer;
         private VisualDelegateCommand _showToolkitsCommand;
-        private RuleApplicationController _ruleAppController;
+        //private RuleApplicationController _ruleAppController;
         private IToolWindow _toolWindow;
         private IRibbonToggleButton _button;
         private const string TOOLKITS = "Toolkits";
@@ -37,7 +37,7 @@ namespace InRule.Labs.Toolkit.Authoring
 
         public override void Enable()
         {
-            _helper = new Helper();
+            
             RuleApplicationService.Opened += WhenRuleAppLoaded;
             RuleApplicationService.Closed += WhenRuleAppClosed;
             SelectionManager.SelectedItemChanging += SelectionManagerOnSelectedItemChanging;
@@ -54,27 +54,28 @@ namespace InRule.Labs.Toolkit.Authoring
         }
         private void SelectionManager_SelectedItemChanged(object sender, SelectionChangedEventArgs e)
         {
-           
-            if (((SelectionManager)sender).SelectedItem != null)
-            {
-                Debug.WriteLine("Changed..." + SelectionManager.SelectedItem.GetType().FullName);
-            }
-        }
-
-        private void SelectionManagerOnSelectedItemChanging(object sender, SelectionChangingEventArgs selectionChangingEventArgs)
-        {
             var item = ((SelectionManager)sender).SelectedItem;
             if (item != null)
             {
                 Type type = item.GetType();
                 if (typeof(RuleRepositoryDefBase).IsAssignableFrom(type))
                 {
-                    //string name =  ((RuleRepositoryDefBase)item).Name;
-                    //RuleRepositoryDefBase changed = this.RuleApplicationService.RuleApplicationDef.FindDef(name);
-                    //Debug.WriteLine("Changing..." + changed.Name);
-                  
+                    if (_toolkitscontainer != null)
+                    {
+                        if (_toolkitscontainer.IsToolkit((RuleRepositoryDefBase)item))
+                        {
+                            Debug.WriteLine("This selected item is in a toolkit....");
+
+                        }
+                    }
+                   
                 }
             }
+
+        }
+        private void SelectionManagerOnSelectedItemChanging(object sender, SelectionChangingEventArgs selectionChangingEventArgs)
+        {
+           
         }
 
         public override void Disable()
@@ -107,12 +108,7 @@ namespace InRule.Labs.Toolkit.Authoring
         {
             if (_toolWindow != null)
                 return;
-
-            //Load the toolkits from the loaded ruleapp
-            _toolkitscontainer = new ToolkitsContainer();
-            _toolkitscontainer.Toolkits = _helper.GetToolkits(this.RuleApplicationService.RuleApplicationDef);
-            _toolkitscontainer.SelectionManager = this.SelectionManager;  //required for context passing into the model
-
+          
             var tree = ServiceManager.Compose<ToolkitTree>(_toolkitscontainer);
 
             // to do as tool window
@@ -130,12 +126,19 @@ namespace InRule.Labs.Toolkit.Authoring
                 _toolWindow.Destroy();
                 _toolWindow = null;
             }
-            _helper = null;
-            _toolkitscontainer = null;
+           
         }
 
         private void WhenRuleAppLoaded(object sender, EventArgs e)
         {
+            _helper = new Helper();
+            //Load the toolkits from the loaded ruleapp
+            _toolkitscontainer = new ToolkitsContainer();
+            _toolkitscontainer.Toolkits = _helper.GetToolkits(this.RuleApplicationService.RuleApplicationDef);
+            _toolkitscontainer.SelectionManager = this.SelectionManager;  //required for context passing into the model
+
+            Debug.WriteLine("Toolkits loaded...");
+
             _showToolkitsCommand.IsEnabled = true;
         }
 
@@ -149,6 +152,9 @@ namespace InRule.Labs.Toolkit.Authoring
         {
             DestroyWindow();
             _showToolkitsCommand.IsEnabled = false;
+            //remove the toolkits from the last loaded ruleapp
+            _toolkitscontainer = null;
+            Debug.WriteLine("Toolkits unloaded...");
         }
     }
 }
