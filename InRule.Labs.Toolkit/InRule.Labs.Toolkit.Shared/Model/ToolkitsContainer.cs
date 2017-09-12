@@ -6,8 +6,9 @@ using InRule.Repository;
 
 namespace InRule.Labs.Toolkit.Shared.Model
 {
-    public class ToolkitsContainer
+    public class ToolkitsContainer 
     {
+       
         private ObservableCollection<ToolkitContents> _toolkits;
         public SelectionManager SelectionManager { get; set; }
         public ObservableCollection<ToolkitContents> Toolkits
@@ -43,7 +44,16 @@ namespace InRule.Labs.Toolkit.Shared.Model
         /// </summary>
         public RuleRepositoryDefBase GetDef(Guid guid)
         {
-            return GetArtifact(guid).DefBase;
+            Artifact art = GetArtifact(guid);
+            if (art != null)
+            {
+                return GetArtifact(guid).DefBase;
+            }
+            else
+            {
+                return null;
+            }
+           
         }
         /// <summary>
         /// Gets a specific Artifact from any toolkit 

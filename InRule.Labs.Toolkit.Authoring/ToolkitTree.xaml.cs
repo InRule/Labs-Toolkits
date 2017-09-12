@@ -33,6 +33,7 @@ namespace InRule.Labs.Toolkit.Authoring
       
         public void SelectArtifact(Artifact artifact)
         {
+            
             IsSelecting = true;
             var treenode = this.ArtifactTree.ContainerFromItem(artifact);
             if (treenode != null)
@@ -40,10 +41,14 @@ namespace InRule.Labs.Toolkit.Authoring
                 treenode.IsSelected = true;
                 treenode.IsExpanded = true;
                 treenode.BringIntoView();
-               
+                //treenode.Focus();
+
             }
             IsSelecting = false;
+            
+            
         }
-        
+       
+
     }
 }

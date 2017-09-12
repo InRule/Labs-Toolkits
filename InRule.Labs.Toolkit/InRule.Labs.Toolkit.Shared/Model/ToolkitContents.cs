@@ -15,6 +15,7 @@ namespace InRule.Labs.Toolkit.Shared.Model
         private string _guid;
         private ObservableCollection<Artifact> _contents;
 
+        
         public string Name
         {
             get { return _name; }

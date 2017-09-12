@@ -35,7 +35,7 @@ namespace InRule.Labs.Toolkit.Shared
                 if (att.Key.Contains("Toolkit:"))
                 {
                     string key = att.Key.Substring(8, att.Key.Length - 8);  //trim toolkit prefix
-                    ToolkitContents tk = new ToolkitContents();
+                    ToolkitContents tk = new ToolkitContents(null);
                     ParseKey(key,tk);
                     tk.Contents = GetToolkitContents(key, dest);
                     toolkits.Add(tk);

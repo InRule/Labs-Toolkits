@@ -7,9 +7,11 @@ using InRule.Repository;
 
 namespace InRule.Labs.Toolkit.Shared.Model
 {
-    public class Artifact
+    public class Artifact 
     {
         private RuleRepositoryDefBase _defBase;
+
+       
 
         public RuleRepositoryDefBase DefBase
         {

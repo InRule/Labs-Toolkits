@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.Linq;
+using System.Windows.Controls;
 using InRule.Authoring.Commanding;
 using InRule.Authoring.ComponentModel;
 using InRule.Authoring.Media;
@@ -14,6 +16,7 @@ using InRule.Repository.RuleElements;
 using InRule.Authoring;
 using InRule.Labs.Toolkit.Shared;
 using InRule.Labs.Toolkit.Shared.Model;
+using SelectionChangedEventArgs = InRule.Authoring.Services.SelectionChangedEventArgs;
 
 
 namespace InRule.Labs.Toolkit.Authoring
@@ -66,11 +69,17 @@ namespace InRule.Labs.Toolkit.Authoring
                         if (_toolkitscontainer.IsToolkit((RuleRepositoryDefBase)item))
                         {
                             Debug.WriteLine("This selected item is in a toolkit....");
+                            foreach (TreeViewItem node in _tree.ArtifactTree.Items)
+                            {
+                                ExpandAllNodes(node);
+                            }
                             ShowToolWindow();
                             Guid guid = ((RuleRepositoryDefBase) item).Guid;
                             Artifact a = _toolkitscontainer.GetArtifact(guid);
                             _tree.SelectArtifact(a);
-                            //ToolkitsContainer.SetSelectedItem(this._toolWindow.);
+                            //TreeViewExtension.ExpandAllNodes(_tree);
+
+
 
                         }
                     }
@@ -78,6 +87,14 @@ namespace InRule.Labs.Toolkit.Authoring
                 }
             }
 
+        }
+        private void ExpandAllNodes(TreeViewItem treeItem)
+        {
+            treeItem.IsExpanded = true;
+            foreach (var childItem in treeItem.Items.OfType<TreeViewItem>())
+            {
+                ExpandAllNodes(childItem);
+            }
         }
         private void SelectionManagerOnSelectedItemChanging(object sender, SelectionChangingEventArgs selectionChangingEventArgs)
         {
@@ -117,6 +134,7 @@ namespace InRule.Labs.Toolkit.Authoring
                 return;
           
             _tree = ServiceManager.Compose<ToolkitTree>(_toolkitscontainer);
+            
 
             // to do as tool window
             _toolWindow = IrAuthorShell.AddToolWindow(_tree, "ToolkitTree", "Toolkits", false);

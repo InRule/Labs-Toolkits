@@ -1,4 +1,5 @@
 using System.Windows.Controls;
+using InRule.Labs.Toolkit.Shared.Model;
 
 namespace InRule.Labs.Toolkit.Authoring
 {
@@ -31,14 +32,22 @@ namespace InRule.Labs.Toolkit.Authoring
             {
 
                 TreeViewItem parentContainer = (TreeViewItem)parentItemContainerGenerator.ContainerFromItem(curChildItem);
-
-                TreeViewItem containerThatMightContainItem = (TreeViewItem)parentContainer.ItemContainerGenerator.ContainerFromItem(item);
+                TreeViewItem containerThatMightContainItem = null;
+                if (parentContainer != null)
+                {
+                    containerThatMightContainItem = (TreeViewItem)parentContainer.ItemContainerGenerator.ContainerFromItem(item);
+                }
+                
 
                 if (containerThatMightContainItem != null)
 
                     return containerThatMightContainItem;
-
-                TreeViewItem recursionResult = ContainerFromItem(parentContainer.ItemContainerGenerator, parentContainer.Items, item);
+                TreeViewItem recursionResult = null;
+                if (parentContainer != null)
+                {
+                    recursionResult = ContainerFromItem(parentContainer.ItemContainerGenerator, parentContainer.Items, item);
+                }
+                 
 
                 if (recursionResult != null)
 
@@ -68,7 +77,8 @@ namespace InRule.Labs.Toolkit.Authoring
         }
 
 
-        private static object ItemFromContainer(ItemContainerGenerator parentItemContainerGenerator, ItemCollection itemCollection, TreeViewItem container)
+        private static object ItemFromContainer(ItemContainerGenerator parentItemContainerGenerator,
+            ItemCollection itemCollection, TreeViewItem container)
 
         {
 
@@ -76,15 +86,19 @@ namespace InRule.Labs.Toolkit.Authoring
 
             {
 
-                TreeViewItem parentContainer = (TreeViewItem)parentItemContainerGenerator.ContainerFromItem(curChildItem);
+                TreeViewItem parentContainer =
+                    (TreeViewItem) parentItemContainerGenerator.ContainerFromItem(curChildItem);
 
-                TreeViewItem itemThatMightBelongToContainer = (TreeViewItem)parentContainer.ItemContainerGenerator.ItemFromContainer(container);
+                TreeViewItem itemThatMightBelongToContainer =
+                    (TreeViewItem) parentContainer.ItemContainerGenerator.ItemFromContainer(container);
 
                 if (itemThatMightBelongToContainer != null)
 
                     return itemThatMightBelongToContainer;
 
-                TreeViewItem recursionResult = ItemFromContainer(parentContainer.ItemContainerGenerator, parentContainer.Items, container) as TreeViewItem;
+                TreeViewItem recursionResult =
+                    ItemFromContainer(parentContainer.ItemContainerGenerator, parentContainer.Items,
+                        container) as TreeViewItem;
 
                 if (recursionResult != null)
 
@@ -95,6 +109,7 @@ namespace InRule.Labs.Toolkit.Authoring
             return null;
 
         }
+
 
     }
 }
