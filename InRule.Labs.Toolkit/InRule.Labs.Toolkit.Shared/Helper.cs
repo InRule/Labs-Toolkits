@@ -35,7 +35,7 @@ namespace InRule.Labs.Toolkit.Shared
                 if (att.Key.Contains("Toolkit:"))
                 {
                     string key = att.Key.Substring(8, att.Key.Length - 8);  //trim toolkit prefix
-                    ToolkitContents tk = new ToolkitContents(null);
+                    ToolkitContents tk = new ToolkitContents();
                     ParseKey(key,tk);
                     tk.Contents = GetToolkitContents(key, dest);
                     toolkits.Add(tk);
@@ -393,10 +393,11 @@ namespace InRule.Labs.Toolkit.Shared
         }
         internal void GetAll(RuleApplicationDef source, ObservableCollection<Artifact> list)
         {
-           // _importHash = "";  //reset
+            _importHash = "";  //reset
             if (source != null)
             {
                 string key = MakeKey(source);
+                /*
                 foreach (RuleRepositoryDefBase def in source.AsEnumerable())
                 {
                     ProcessDef(def, list, key);
@@ -405,9 +406,21 @@ namespace InRule.Labs.Toolkit.Shared
                 {
                     ProcessDef(def,list,key);
                 }
+                */
+                RuleRepositoryDefCollection[] colls = source.GetAllChildCollections();
+                foreach (RuleRepositoryDefCollection coll in colls)
+                {
+                    foreach (RuleRepositoryDefBase def in coll)
+                    {
+                        ProcessChildren(def, list, key);
+                    }
+                }
             }
         }
-
+        /// <summary>
+        /// Keep this method around in case we decide to use .AsEnumerable for general looping and processing.
+        /// </summary>
+        /*
         internal void ProcessDef(RuleRepositoryDefBase def, ObservableCollection<Artifact> list, string key)
         {
             if (IsSafeTemplateDef(def)) //some vocab definitions are not safe to stamp with an attribute
@@ -421,8 +434,44 @@ namespace InRule.Labs.Toolkit.Shared
                 list?.Add(a);
             }
         }
+        */
+        //TODO: Refactor this member variable for thread safety
+        private string _importHash = ""; //prevents duplicate import
+        internal void ProcessChildren(RuleRepositoryDefBase child, ObservableCollection<Artifact> list, string key)
+        {
+            if (_importHash.Contains(child.Name) == false)
+            {
+                _importHash = _importHash + child.Name;  //update the hash
+                //Console.WriteLine(child.Name);
+                if (String.IsNullOrEmpty(key) == false)
+                {
+                    if (IsSafeTemplateDef(child)) //some vocab definitions are not safe to stamp with an attribute
+                    {
+                        StampAttribute(child, key);
+                    }
+                }
+                Artifact a = new Artifact();
+                a.DefBase = child;
+                list?.Add(a);
+                var collquery = from childcollections in child.GetAllChildCollections()
+                    select childcollections;
+                foreach (RuleRepositoryDefCollection defcollection in collquery)
+                {
+                    var defquery = from RuleRepositoryDefBase items in defcollection select items;
+                    foreach (var def in defquery)
+                    {
+                        ProcessChildren(def, list, key);
+                    }
+                }
+            }
+        }
+        
         /// <summary>
-        /// Deep search of a ruleapp for a specific def
+        /// Deep search of a ruleapp for a specific def.  This code may not be suitable for proper looping and stamping
+        /// of defs because the AsEnumerable misses some artifacts.  This will remain standalone for specific artifacts
+        /// until it's decided that the ProcessChildren and this code can be refactored safely.  This code has the
+        /// advantage of not requireing the member variable to hash duplicate hits and remove them from the
+        /// collection.
         /// </summary>
         public RuleRepositoryDefBase FindDefDeep(RuleApplicationDef ruleapp, string guid)
         {
@@ -454,5 +503,40 @@ namespace InRule.Labs.Toolkit.Shared
             }
             return found;
         }
+
+        public ObservableCollection<ArtifactCount> CountArtifactsByType(RuleApplicationDef source)
+        {
+            ObservableCollection<ArtifactCount> summary = new ObservableCollection<ArtifactCount>();
+            ObservableCollection<Artifact> list = new ObservableCollection<Artifact>();
+            GetAll(source, list);  //Get a flat list of everything in the ruleapp
+            foreach (Artifact item in list)
+            {
+                AddArtifactToCount(item.DefBase, summary);
+            }
+            return summary;
+        }
+
+        internal void AddArtifactToCount(RuleRepositoryDefBase def, ObservableCollection<ArtifactCount> summary)
+        {
+            //Console.WriteLine(def.AuthoringElementTypeName);
+            bool found = false;
+            foreach (ArtifactCount item in summary)
+            {
+                if (item.ArtifcatType == def.AuthoringElementTypeName)
+                {
+                    item.Count++;
+                    found = true;
+                    break;
+                }
+            }
+            if (found == false)
+            {
+                ArtifactCount count = new ArtifactCount();
+                count.ArtifcatType = def.AuthoringElementTypeName;
+                count.Count++;
+                summary.Add(count);
+            }
+        }
+        
     }
 }

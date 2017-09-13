@@ -204,7 +204,18 @@ namespace InRule.Labs.Toolkit.Shared.Tests
             RuleRepositoryDefBase found = h.FindDefDeep(dest, "ece7c19a-f8c1-4212-9cc2-90f6dcf837cf");
             Assert.NotNull(found);
         }
-     
+        [Test]
+        public void TestCountSummary()
+        {
+            Helper h = new Helper();
+            RuleApplicationDef source = RuleApplicationDef.Load(_sourcePath);
+            ObservableCollection<ArtifactCount> result = h.CountArtifactsByType(source);
+            foreach (ArtifactCount item in result)
+            {
+                Console.WriteLine(item.ArtifcatType + " - " + item.Count);
+            }
+        }
+
 
     }
 }

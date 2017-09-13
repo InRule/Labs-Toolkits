@@ -61,6 +61,7 @@
     <Compile Include="Helper.cs" />
     <Compile Include="InvalidImportException.cs" />
     <Compile Include="Model\Artifact.cs" />
+    <Compile Include="Model\ArtifactCount.cs" />
     <Compile Include="Model\ToolkitContents.cs" />
     <Compile Include="Model\ToolkitsContainer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
