@@ -504,16 +504,24 @@ namespace InRule.Labs.Toolkit.Shared
             return found;
         }
 
-        public ObservableCollection<ArtifactCount> CountArtifactsByType(RuleApplicationDef source)
+        public void CountArtifactsByTypeBatch(string path, ObservableCollection<ArtifactCount> summary)
         {
-            ObservableCollection<ArtifactCount> summary = new ObservableCollection<ArtifactCount>();
+            string[] files =
+                Directory.GetFiles(path, "*.ruleapp*", SearchOption.AllDirectories);
+            foreach (string file in files)
+            {
+                RuleApplicationDef source = RuleApplicationDef.Load(file);
+                CountArtifactsByType(source, summary);
+            }
+        }
+        public void CountArtifactsByType(RuleApplicationDef source, ObservableCollection<ArtifactCount> summary)
+        {
             ObservableCollection<Artifact> list = new ObservableCollection<Artifact>();
             GetAll(source, list);  //Get a flat list of everything in the ruleapp
             foreach (Artifact item in list)
             {
                 AddArtifactToCount(item.DefBase, summary);
             }
-            return summary;
         }
 
         internal void AddArtifactToCount(RuleRepositoryDefBase def, ObservableCollection<ArtifactCount> summary)

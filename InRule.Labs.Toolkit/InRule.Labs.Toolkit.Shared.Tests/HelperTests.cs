@@ -209,10 +209,25 @@ namespace InRule.Labs.Toolkit.Shared.Tests
         {
             Helper h = new Helper();
             RuleApplicationDef source = RuleApplicationDef.Load(_sourcePath);
-            ObservableCollection<ArtifactCount> result = h.CountArtifactsByType(source);
+            ObservableCollection<ArtifactCount> result = new ObservableCollection<ArtifactCount>();
+            h.CountArtifactsByType(source, result);
             foreach (ArtifactCount item in result)
             {
                 Console.WriteLine(item.ArtifcatType + " - " + item.Count);
+            }
+        }
+        [Test]
+        public void TestCountInDirectory()
+        {
+            Helper h = new Helper();
+            string path = Path.Combine(AppDomain.CurrentDomain.BaseDirectory.Substring(0,
+                AppDomain.CurrentDomain.BaseDirectory.IndexOf("bin")), @"Ruleapps\");
+            //RuleApplicationDef source = RuleApplicationDef.Load(_sourcePath);
+            ObservableCollection<ArtifactCount> result = new ObservableCollection<ArtifactCount>();
+            h.CountArtifactsByTypeBatch(path, result);
+            foreach (ArtifactCount item in result)
+            {
+                Console.WriteLine("\"" + item.ArtifcatType + "\", " + item.Count);
             }
         }
 
