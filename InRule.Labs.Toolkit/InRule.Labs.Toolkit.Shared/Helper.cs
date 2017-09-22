@@ -510,8 +510,21 @@ namespace InRule.Labs.Toolkit.Shared
                 Directory.GetFiles(path, "*.ruleapp*", SearchOption.AllDirectories);
             foreach (string file in files)
             {
-                RuleApplicationDef source = RuleApplicationDef.Load(file);
-                CountArtifactsByType(source, summary);
+                RuleApplicationDef source = null;
+                try
+                {
+                    source = RuleApplicationDef.Load(file);
+                }
+                ///todo: don't bury this exception and add a logger
+                catch (Exception e)
+                {
+                    Console.WriteLine(e.Message);
+                }
+                if (source != null)
+                {
+                    CountArtifactsByType(source, summary);
+                }
+               
             }
         }
         public void CountArtifactsByType(RuleApplicationDef source, ObservableCollection<ArtifactCount> summary)
