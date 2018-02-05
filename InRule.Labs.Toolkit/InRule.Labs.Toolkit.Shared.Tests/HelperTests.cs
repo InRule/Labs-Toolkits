@@ -10,6 +10,7 @@ using InRule.Repository;
 using System.IO;
 using InRule.Labs.Toolkit.Shared.Model;
 using System.Collections.ObjectModel;
+using InRule.Repository.EndPoints;
 
 namespace InRule.Labs.Toolkit.Shared.Tests
 {
@@ -230,7 +231,18 @@ namespace InRule.Labs.Toolkit.Shared.Tests
                 Console.WriteLine("\"" + item.ArtifcatType + "\", " + item.Count);
             }
         }
+        [Test]
+        public void TestImportDefByCategory()
+        {
+            Helper h = new Helper();
+            RuleApplicationDef source = RuleApplicationDef.Load(_sourcePath);
+            RuleApplicationDef dest = RuleApplicationDef.Load(_destPath);
+            h.ImportRuleApp(source, dest, "Test");
+            
+            //TESTS
+            Assert.NotNull(dest.FindDef("Entity1"));
 
+        }
 
     }
 }

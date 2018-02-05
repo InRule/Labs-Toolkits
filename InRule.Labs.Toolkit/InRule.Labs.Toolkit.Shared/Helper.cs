@@ -83,17 +83,22 @@ namespace InRule.Labs.Toolkit.Shared
                 throw new InvalidImportException("The import you just attempted is not valid.");
             }
         }
+
         /// <summary>
         /// Gerneral import for ruleaps off the filesystem.
         /// </summary>
         public void ImportRuleApp(RuleApplicationDef source, RuleApplicationDef dest)
         {
-            Import(source, dest, false);
+            ImportRuleApp(source, dest, null);
+        }
+        public void ImportRuleApp(RuleApplicationDef source, RuleApplicationDef dest, string category)
+        {
+            Import(source, dest, false, category);
             ValidateImport(dest);
         }
-        public void ImportRuleApp(RuleApplicationDef source, RuleApplicationDef dest, string savePath)
+        public void ImportRuleApp(RuleApplicationDef source, RuleApplicationDef dest, string savePath, string category)
         {
-            ImportRuleApp(source, dest);
+            ImportRuleApp(source, dest, category);
             dest.SaveToFile(savePath);
         }
         public void ImportRuleApp(string sourceRuleappPath, string destRuleappPath)
@@ -259,51 +264,145 @@ namespace InRule.Labs.Toolkit.Shared
             }
             return resultAtt;
         }
+
         internal void Import(RuleApplicationDef source, RuleApplicationDef dest, bool toolkit)
+        {
+            Import(source,dest,toolkit, null);
+        }
+        internal void Import(RuleApplicationDef source, RuleApplicationDef dest, bool toolkit, string cat )
         {
             string key = MakeKey(source);
             if (toolkit == true)
             {
                 GetAll(source);  //stamps source artifacts with an attribute containing a toolkit key
             }
+            //Ensure Category Exists
+            if ((cat != null) && (cat.Trim() != ""))
+            {
+                if(dest.Categories.Contains(cat) == false)
+                {
+                    dest.Categories.Add(new CategoryDef(cat));
+                }
+            }
+
             //import entities
             foreach (RuleRepositoryDefBase entityDef in source.Entities)
-            {  
-                dest.Entities.Add(entityDef.CopyWithSameGuids());
+            {
+                //Enforce import by category if it's specified, else just import
+                if ((cat != null) && (cat.Trim() != ""))
+                {
+                    if (entityDef.AssignedCategories.Contains(cat))
+                    {
+                        dest.Entities.Add(entityDef.CopyWithSameGuids());
+                    }
+                }
+                else
+                {
+                    dest.Entities.Add(entityDef.CopyWithSameGuids());
+                }
             }
             //import rulesets
             foreach (RuleRepositoryDefBase rulesetDef in source.RuleSets)
             {
-                dest.RuleSets.Add(rulesetDef.CopyWithSameGuids());
+                //Enforce import by category if it's specified, else just import
+                if ((cat != null) && (cat.Trim() != ""))
+                {
+                    if (rulesetDef.AssignedCategories.Contains(cat))
+                    {
+                        dest.RuleSets.Add(rulesetDef.CopyWithSameGuids());
+                    }
+                }
+                else
+                {
+                    dest.RuleSets.Add(rulesetDef.CopyWithSameGuids());
+                }
             }
             //import endpoints
             foreach (RuleRepositoryDefBase endpoint in source.EndPoints)
             {
-                dest.EndPoints.Add(endpoint.CopyWithSameGuids());
+
+                //Enforce import by category if it's specified, else just import
+                if ((cat != null) && (cat.Trim() != ""))
+                {
+                    if (endpoint.AssignedCategories.Contains(cat))
+                    {
+                        dest.EndPoints.Add(endpoint.CopyWithSameGuids());
+                    }
+                }
+                else
+                {
+                    dest.EndPoints.Add(endpoint.CopyWithSameGuids());
+                }
             }
             //import udfs
             foreach (RuleRepositoryDefBase udf in source.UdfLibraries)
             {
-                dest.UdfLibraries.Add(udf.CopyWithSameGuids());
+
+                //Enforce import by category if it's specified, else just import
+                if ((cat != null) && (cat.Trim() != ""))
+                {
+                    if (udf.AssignedCategories.Contains(cat))
+                    {
+                        dest.UdfLibraries.Add(udf.CopyWithSameGuids());
+                    }
+                }
+                else
+                {
+                    dest.UdfLibraries.Add(udf.CopyWithSameGuids());
+                }
             }
             //import categories
             foreach (RuleRepositoryDefBase category in source.Categories)
             {
-                dest.Categories.Add(category.CopyWithSameGuids());
+
+                //Enforce import by category if it's specified, else just import
+                if ((cat != null) && (cat.Trim() != ""))
+                {
+                    //do nothing if it's import by cat, we add the required category up front
+                }
+                else
+                {
+                    //import all
+                    dest.Categories.Add(category.CopyWithSameGuids());
+                }
+                
             }
             //data elements
             foreach (RuleRepositoryDefBase dataelement in source.DataElements)
             {
-                dest.DataElements.Add(dataelement.CopyWithSameGuids());
+                //Enforce import by category if it's specified, else just import
+                if ((cat != null) && (cat.Trim() != ""))
+                {
+                    if (dataelement.AssignedCategories.Contains(cat))
+                    {
+                       dest.DataElements.Add(dataelement.CopyWithSameGuids());
+                    }
+                }
+                else
+                {
+                    dest.DataElements.Add(dataelement.CopyWithSameGuids());
+                }
             }
             //import vocabulary at the ruleapp level
             foreach (RuleRepositoryDefBase template in source.Vocabulary.Templates)
             {
+                
                 if (dest.Vocabulary == null)
                 {
                     dest.Vocabulary = new VocabularyDef();
+                }         
+                //Enforce import by category if it's specified, else just import
+                if ((cat != null) && (cat.Trim() != ""))
+                {
+                    if (template.AssignedCategories.Contains(cat))
+                    {
+                        dest.Vocabulary.Templates.Add(template.CopyWithSameGuids());
+                    }
                 }
-                dest.Vocabulary.Templates.Add(template.CopyWithSameGuids());
+                else
+                {
+                    dest.Vocabulary.Templates.Add(template.CopyWithSameGuids());
+                }
             }
         }
         internal void Remove(RuleApplicationDef dest, string key)
