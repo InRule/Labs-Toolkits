@@ -11,6 +11,7 @@ using System.IO;
 using InRule.Labs.Toolkit.Shared.Model;
 using System.Collections.ObjectModel;
 using InRule.Repository.EndPoints;
+using InRule.Repository.SchemaOperations;
 
 namespace InRule.Labs.Toolkit.Shared.Tests
 {
@@ -237,10 +238,13 @@ namespace InRule.Labs.Toolkit.Shared.Tests
             Helper h = new Helper();
             RuleApplicationDef source = RuleApplicationDef.Load(_sourcePath);
             RuleApplicationDef dest = RuleApplicationDef.Load(_destPath);
-            h.ImportRuleApp(source, dest, "Test");
-            
+            h.ImportRuleApp(source, dest, "Category1");
+            RuleApplicationValidationErrorCollection err = dest.Validate();
+            string tempPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory.Substring(0, AppDomain.CurrentDomain.BaseDirectory.IndexOf("bin")), @"Ruleapps\", Guid.NewGuid() + "TempRuleApplication.ruleappx");
+            dest.SaveToFile(tempPath);
+
             //TESTS
-            Assert.NotNull(dest.FindDef("Entity1"));
+            //Assert.NotNull(dest.FindDef("IndependentRuleset1"));
 
         }
 

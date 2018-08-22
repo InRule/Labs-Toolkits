@@ -293,6 +293,22 @@ namespace InRule.Labs.Toolkit.Shared
                 {
                     if (entityDef.AssignedCategories.Contains(cat))
                     {
+                        // strip out the rulesets and rules that don't have the category
+                        EntityDef entity = (EntityDef) entityDef;
+                        //RemoveNonCategoryDefs(rulesetDef, cat);
+                        foreach (RuleRepositoryDefBase def in entity.RuleElements.ToList())
+                        {
+                            //RemoveNonCategoryDefs(def, cat);
+                            RemoveNonCategoryDefsFromChildren(def, cat);
+                        }
+                        //Clean empty rulesets that don't conform
+                        foreach (RuleRepositoryDefBase def in entity.RuleElements.ToList())
+                        {
+                            if (def.HasChildCollectionChildren == false)
+                            {
+                                entity.RuleElements.Remove(def);
+                            }
+                        }
                         dest.Entities.Add(entityDef.CopyWithSameGuids());
                     }
                 }
@@ -309,6 +325,14 @@ namespace InRule.Labs.Toolkit.Shared
                 {
                     if (rulesetDef.AssignedCategories.Contains(cat))
                     {
+                        // Just add the rule flow and process the children of other ruleset types
+                        if (rulesetDef.AuthoringElementTypeName != "Rule Flow")
+                        {
+                            // before adding, strip out all children lacking the category
+                            RemoveNonCategoryDefs(rulesetDef, cat);
+                        }
+                       
+                        //add the ruleset (it's safe because the ruleset has the category
                         dest.RuleSets.Add(rulesetDef.CopyWithSameGuids());
                     }
                 }
@@ -564,7 +588,52 @@ namespace InRule.Labs.Toolkit.Shared
                 }
             }
         }
-        
+
+        internal void RemoveNonCategoryDefs(RuleRepositoryDefBase child, string cat)
+        {
+            /*
+            RuleRepositoryDefCollection[] colls = child.GetAllChildCollections();
+            foreach (RuleRepositoryDefCollection coll in colls.ToList())
+            {
+               
+                foreach (RuleRepositoryDefBase def in coll.ToList<RuleRepositoryDefBase>())
+                {
+                    RemoveNonCategoryDefsFromChildren(def, cat);
+                    
+                }
+            }
+            */
+            //Try to remove the parent if it has no children
+            //RemoveNonCategoryDefsFromChildren(child, cat);
+
+        }
+        internal void RemoveNonCategoryDefsFromChildren(RuleRepositoryDefBase child, string cat)
+        {
+            if (_importHash.Contains(child.Name) == false)
+            {
+                _importHash = _importHash + child.Name;  //update the hash
+               
+                    if ((child.HasChildCollectionChildren == false) && (child.AssignedCategories.Contains(cat) == false))
+                    {
+                        //only remove if it's the lowest node 
+                        child.ThisRuleSet.Rules.Remove(child);
+                    }
+                    else if (child.HasChildCollectionChildren == true)
+                    {
+                        var collquery = from childcollections in child.GetAllChildCollections()
+                            select childcollections;
+                        foreach (RuleRepositoryDefCollection defcollection in collquery)
+                        {
+                            var defquery = from RuleRepositoryDefBase items in defcollection select items;
+                            foreach (var def in defquery.ToList<RuleRepositoryDefBase>())
+                            {
+                                RemoveNonCategoryDefsFromChildren(def, cat);
+                            }
+                        }
+                    }
+              }
+        }
+
         /// <summary>
         /// Deep search of a ruleapp for a specific def.  This code may not be suitable for proper looping and stamping
         /// of defs because the AsEnumerable misses some artifacts.  This will remain standalone for specific artifacts
