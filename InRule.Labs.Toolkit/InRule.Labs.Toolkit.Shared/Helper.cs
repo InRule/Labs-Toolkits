@@ -329,7 +329,7 @@ namespace InRule.Labs.Toolkit.Shared
                         if (rulesetDef.AuthoringElementTypeName != "Rule Flow")
                         {
                             // before adding, strip out all children lacking the category
-                            RemoveNonCategoryDefs(rulesetDef, cat);
+                            RemoveNonCategoryDefsFromChildren(rulesetDef, cat);
                         }
                        
                         //add the ruleset (it's safe because the ruleset has the category
@@ -540,24 +540,7 @@ namespace InRule.Labs.Toolkit.Shared
                 }
             }
         }
-        /// <summary>
-        /// Keep this method around in case we decide to use .AsEnumerable for general looping and processing.
-        /// </summary>
-        /*
-        internal void ProcessDef(RuleRepositoryDefBase def, ObservableCollection<Artifact> list, string key)
-        {
-            if (IsSafeTemplateDef(def)) //some vocab definitions are not safe to stamp with an attribute
-            {
-                StampAttribute(def, key);
-            }
-            if (list != null)
-            {
-                Artifact a = new Artifact();
-                a.DefBase = def;
-                list?.Add(a);
-            }
-        }
-        */
+       
         //TODO: Refactor this member variable for thread safety
         private string _importHash = ""; //prevents duplicate import
         internal void ProcessChildren(RuleRepositoryDefBase child, ObservableCollection<Artifact> list, string key)
@@ -589,24 +572,11 @@ namespace InRule.Labs.Toolkit.Shared
             }
         }
 
-        internal void RemoveNonCategoryDefs(RuleRepositoryDefBase child, string cat)
-        {
-            /*
-            RuleRepositoryDefCollection[] colls = child.GetAllChildCollections();
-            foreach (RuleRepositoryDefCollection coll in colls.ToList())
-            {
-               
-                foreach (RuleRepositoryDefBase def in coll.ToList<RuleRepositoryDefBase>())
-                {
-                    RemoveNonCategoryDefsFromChildren(def, cat);
-                    
-                }
-            }
-            */
-            //Try to remove the parent if it has no children
-            //RemoveNonCategoryDefsFromChildren(child, cat);
-
-        }
+        /// <summary>
+        /// This enforces the policy of importing only times that are tagged with a category.  It will include parents
+        /// even if they are not tagged with a category.  This expects that parents do not exist in the existing
+        /// Rule Application so it's not a true "merge" capability.
+        /// </summary>
         internal void RemoveNonCategoryDefsFromChildren(RuleRepositoryDefBase child, string cat)
         {
             if (_importHash.Contains(child.Name) == false)
