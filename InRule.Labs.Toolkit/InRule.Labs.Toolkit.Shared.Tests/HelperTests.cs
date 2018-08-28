@@ -238,7 +238,7 @@ namespace InRule.Labs.Toolkit.Shared.Tests
             Helper h = new Helper();
             RuleApplicationDef source = RuleApplicationDef.Load(_sourcePath);
             RuleApplicationDef dest = RuleApplicationDef.Load(_destPath);
-            h.ImportRuleApp(source, dest, "Category1");
+            h.ImportRuleApp(source, dest, "Category1", Helper.POLICY_IGNORE_EXISTING);
             RuleApplicationValidationErrorCollection err = dest.Validate();
             string tempPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory.Substring(0, AppDomain.CurrentDomain.BaseDirectory.IndexOf("bin")), @"Ruleapps\", Guid.NewGuid() + "TempRuleApplication.ruleappx");
             dest.SaveToFile(tempPath);

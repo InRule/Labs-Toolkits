@@ -78,7 +78,8 @@ namespace InRule.Labs.Toolkit.Shared
         }
         internal void ValidateImport(RuleApplicationDef dest)
         {
-            if (dest.Validate().Count != 0)
+            var result = dest.Validate();
+            if (result.Count != 0)
             {
                 throw new InvalidImportException("The import you just attempted is not valid.");
             }
@@ -89,16 +90,16 @@ namespace InRule.Labs.Toolkit.Shared
         /// </summary>
         public void ImportRuleApp(RuleApplicationDef source, RuleApplicationDef dest)
         {
-            ImportRuleApp(source, dest, null);
+            ImportRuleApp(source, dest, null, null);
         }
-        public void ImportRuleApp(RuleApplicationDef source, RuleApplicationDef dest, string category)
+        public void ImportRuleApp(RuleApplicationDef source, RuleApplicationDef dest, string category, string policy)
         {
-            Import(source, dest, false, category);
+            Import(source, dest, false, category, policy);
             ValidateImport(dest);
         }
-        public void ImportRuleApp(RuleApplicationDef source, RuleApplicationDef dest, string savePath, string category)
+        public void ImportRuleApp(RuleApplicationDef source, RuleApplicationDef dest, string savePath, string category, string policy)
         {
-            ImportRuleApp(source, dest, category);
+            ImportRuleApp(source, dest, category, policy);
             dest.SaveToFile(savePath);
         }
         public void ImportRuleApp(string sourceRuleappPath, string destRuleappPath)
@@ -106,7 +107,7 @@ namespace InRule.Labs.Toolkit.Shared
             try
             {
                 ImportRuleApp(RuleApplicationDef.Load(sourceRuleappPath),
-                    RuleApplicationDef.Load(destRuleappPath), destRuleappPath);
+                    RuleApplicationDef.Load(destRuleappPath), destRuleappPath,null,null);
             }
             catch (Exception ex)
             {
@@ -267,9 +268,11 @@ namespace InRule.Labs.Toolkit.Shared
 
         internal void Import(RuleApplicationDef source, RuleApplicationDef dest, bool toolkit)
         {
-            Import(source,dest,toolkit, null);
+            Import(source,dest,toolkit, null, null);
         }
-        internal void Import(RuleApplicationDef source, RuleApplicationDef dest, bool toolkit, string cat )
+
+        public static string POLICY_IGNORE_EXISTING = "IGNORE_EXISTING";
+        internal void Import(RuleApplicationDef source, RuleApplicationDef dest, bool toolkit, string cat, string policy )
         {
             string key = MakeKey(source);
             if (toolkit == true)
@@ -288,10 +291,15 @@ namespace InRule.Labs.Toolkit.Shared
             //import entities
             foreach (RuleRepositoryDefBase entityDef in source.Entities)
             {
+                
                 //Enforce import by category if it's specified, else just import
                 if ((cat != null) && (cat.Trim() != ""))
                 {
-                    if (entityDef.AssignedCategories.Contains(cat))
+                    //TODO: Improve this case to see if it can share more with "existing entities case"
+                    
+                    //if the entity is not in the destination, then we can import just what we need.  Easy.
+                    if (entityDef.AssignedCategories.Contains(cat) &&
+                        (this.FindDefDeep(dest, entityDef.Guid.ToString()) == null))
                     {
                         // strip out the rulesets and rules that don't have the category
                         EntityDef entity = (EntityDef) entityDef;
@@ -301,6 +309,7 @@ namespace InRule.Labs.Toolkit.Shared
                             //RemoveNonCategoryDefs(def, cat);
                             RemoveNonCategoryDefsFromChildren(def, cat);
                         }
+
                         //Clean empty rulesets that don't conform
                         foreach (RuleRepositoryDefBase def in entity.RuleElements.ToList())
                         {
@@ -309,32 +318,40 @@ namespace InRule.Labs.Toolkit.Shared
                                 entity.RuleElements.Remove(def);
                             }
                         }
+
+                        dest.Entities.Add(entityDef.CopyWithSameGuids());
+                    }
+                    
+
+                    //the entity exists, so we need to be more careful on the merge
+                    else if (entityDef.AssignedCategories.Contains(cat) &&
+                             (this.FindDefDeep(dest, entityDef.Guid.ToString()) != null))
+                    {
+                        EntityDef entity = (EntityDef) entityDef;
+                        //ignore parent policy
+                        if (policy == POLICY_IGNORE_EXISTING)
+                        {
+                            foreach (RuleRepositoryDefBase def in entity.RuleElements.ToList())
+                            {
+                                IgnoreExistingDef(def, cat, dest);
+                            }
+                        }
+                    }
+                    //Basic import case
+                    else if ((cat == null) || (cat.Trim() == ""))
+                    {
                         dest.Entities.Add(entityDef.CopyWithSameGuids());
                     }
                 }
-                else
-                {
-                    dest.Entities.Add(entityDef.CopyWithSameGuids());
-                }
             }
+
             //import rulesets
             foreach (RuleRepositoryDefBase rulesetDef in source.RuleSets)
             {
                 //Enforce import by category if it's specified, else just import
                 if ((cat != null) && (cat.Trim() != ""))
                 {
-                    if (rulesetDef.AssignedCategories.Contains(cat))
-                    {
-                        // Just add the rule flow and process the children of other ruleset types
-                        if (rulesetDef.AuthoringElementTypeName != "Rule Flow")
-                        {
-                            // before adding, strip out all children lacking the category
-                            RemoveNonCategoryDefsFromChildren(rulesetDef, cat);
-                        }
-                       
-                        //add the ruleset (it's safe because the ruleset has the category
-                        dest.RuleSets.Add(rulesetDef.CopyWithSameGuids());
-                    }
+                    IgnoreExistingDef(rulesetDef, cat, dest);
                 }
                 else
                 {
@@ -602,6 +619,58 @@ namespace InRule.Labs.Toolkit.Shared
                         }
                     }
               }
+        }
+
+        internal void IgnoreExistingDef(RuleRepositoryDefBase child, string cat, RuleApplicationDef dest)
+        {
+
+            //does this def exist in the destination, keep going deep
+            if ((this.FindDefDeep(dest, child.Guid.ToString()) != null))
+            {
+                if (child.HasChildCollectionChildren == false)
+                {
+                   Debug.WriteLine("The child exists in the ruleapp and has no children -- Do nothing.");
+                }
+                else
+                {
+                   //traverse the children and add only those that don't exist
+                        var collquery = from childcollections in child.GetAllChildCollections()
+                            select childcollections;
+                        foreach (RuleRepositoryDefCollection defcollection in collquery)
+                        {
+                            var defquery = from RuleRepositoryDefBase items in defcollection select items;
+                            foreach (var def in defquery.ToList<RuleRepositoryDefBase>())
+                            {
+                                IgnoreExistingDef(def, cat, dest);
+                            }
+                        }
+                    
+                }
+
+            }
+            else 
+            {
+                if (child.AssignedCategories.Contains(cat))
+                {
+                    RuleRepositoryDefBase destParent = this.FindDefDeep(dest, child.Parent.Guid.ToString());
+                    RuleRepositoryDefBase copy = child.CopyWithSameGuids();
+                    child.SetParent(null);
+                    if (destParent.AuthoringElementTypeName != "Rule Set")
+                    {
+                        SimpleRuleDef simpleParent = (SimpleRuleDef) destParent;
+                        simpleParent.SubRules.Add(child);
+                    }
+                    else
+                    {
+                        destParent.ThisRuleSet.Rules.Add(child);
+                    }
+
+                   Debug.WriteLine("----Just add it --- " + child.Name + " Parent in dest: " + destParent.Name);
+
+
+                }
+               
+            }
         }
 
         /// <summary>
