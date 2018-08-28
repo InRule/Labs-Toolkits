@@ -90,16 +90,16 @@ namespace InRule.Labs.Toolkit.Shared
         /// </summary>
         public void ImportRuleApp(RuleApplicationDef source, RuleApplicationDef dest)
         {
-            ImportRuleApp(source, dest, null, null);
+            ImportRuleApp(source, dest, null);
         }
-        public void ImportRuleApp(RuleApplicationDef source, RuleApplicationDef dest, string category, string policy)
+        public void ImportRuleApp(RuleApplicationDef source, RuleApplicationDef dest, string category)
         {
-            Import(source, dest, false, category, policy);
+            Import(source, dest, false, category);
             ValidateImport(dest);
         }
-        public void ImportRuleApp(RuleApplicationDef source, RuleApplicationDef dest, string savePath, string category, string policy)
+        public void ImportRuleApp(RuleApplicationDef source, RuleApplicationDef dest, string savePath, string category)
         {
-            ImportRuleApp(source, dest, category, policy);
+            ImportRuleApp(source, dest, category);
             dest.SaveToFile(savePath);
         }
         public void ImportRuleApp(string sourceRuleappPath, string destRuleappPath)
@@ -107,7 +107,7 @@ namespace InRule.Labs.Toolkit.Shared
             try
             {
                 ImportRuleApp(RuleApplicationDef.Load(sourceRuleappPath),
-                    RuleApplicationDef.Load(destRuleappPath), destRuleappPath,null,null);
+                    RuleApplicationDef.Load(destRuleappPath), destRuleappPath, null);
             }
             catch (Exception ex)
             {
@@ -268,11 +268,11 @@ namespace InRule.Labs.Toolkit.Shared
 
         internal void Import(RuleApplicationDef source, RuleApplicationDef dest, bool toolkit)
         {
-            Import(source,dest,toolkit, null, null);
+            Import(source,dest,toolkit, null);
         }
 
-        public static string POLICY_IGNORE_EXISTING = "IGNORE_EXISTING";
-        internal void Import(RuleApplicationDef source, RuleApplicationDef dest, bool toolkit, string cat, string policy )
+       
+        internal void Import(RuleApplicationDef source, RuleApplicationDef dest, bool toolkit, string cat)
         {
             string key = MakeKey(source);
             if (toolkit == true)
@@ -280,7 +280,7 @@ namespace InRule.Labs.Toolkit.Shared
                 GetAll(source);  //stamps source artifacts with an attribute containing a toolkit key
             }
             //Ensure Category Exists
-            if ((cat != null) && (cat.Trim() != ""))
+            if (cat != null)
             {
                 if(dest.Categories.Contains(cat) == false)
                 {
@@ -293,10 +293,10 @@ namespace InRule.Labs.Toolkit.Shared
             {
                 
                 //Enforce import by category if it's specified, else just import
-                if ((cat != null) && (cat.Trim() != ""))
+                if (cat != null)
                 {
                     //TODO: Improve this case to see if it can share more with "existing entities case"
-                    
+
                     //if the entity is not in the destination, then we can import just what we need.  Easy.
                     if (entityDef.AssignedCategories.Contains(cat) &&
                         (this.FindDefDeep(dest, entityDef.Guid.ToString()) == null))
@@ -321,7 +321,7 @@ namespace InRule.Labs.Toolkit.Shared
 
                         dest.Entities.Add(entityDef.CopyWithSameGuids());
                     }
-                    
+
 
                     //the entity exists, so we need to be more careful on the merge
                     else if (entityDef.AssignedCategories.Contains(cat) &&
@@ -329,27 +329,29 @@ namespace InRule.Labs.Toolkit.Shared
                     {
                         EntityDef entity = (EntityDef) entityDef;
                         //ignore parent policy
-                        if (policy == POLICY_IGNORE_EXISTING)
-                        {
+                        
                             foreach (RuleRepositoryDefBase def in entity.RuleElements.ToList())
                             {
                                 IgnoreExistingDef(def, cat, dest);
                             }
-                        }
+                        
                     }
-                    //Basic import case
-                    else if ((cat == null) || (cat.Trim() == ""))
+                }
+                //Basic import case
+                else
+                {
                     {
                         dest.Entities.Add(entityDef.CopyWithSameGuids());
                     }
                 }
+               
             }
 
             //import rulesets
             foreach (RuleRepositoryDefBase rulesetDef in source.RuleSets)
             {
                 //Enforce import by category if it's specified, else just import
-                if ((cat != null) && (cat.Trim() != ""))
+                if (cat != null)
                 {
                     IgnoreExistingDef(rulesetDef, cat, dest);
                 }
@@ -363,7 +365,7 @@ namespace InRule.Labs.Toolkit.Shared
             {
 
                 //Enforce import by category if it's specified, else just import
-                if ((cat != null) && (cat.Trim() != ""))
+                if (cat != null)
                 {
                     if (endpoint.AssignedCategories.Contains(cat))
                     {
@@ -380,7 +382,7 @@ namespace InRule.Labs.Toolkit.Shared
             {
 
                 //Enforce import by category if it's specified, else just import
-                if ((cat != null) && (cat.Trim() != ""))
+                if (cat != null)
                 {
                     if (udf.AssignedCategories.Contains(cat))
                     {
@@ -397,7 +399,7 @@ namespace InRule.Labs.Toolkit.Shared
             {
 
                 //Enforce import by category if it's specified, else just import
-                if ((cat != null) && (cat.Trim() != ""))
+                if (cat != null)
                 {
                     //do nothing if it's import by cat, we add the required category up front
                 }
@@ -412,7 +414,7 @@ namespace InRule.Labs.Toolkit.Shared
             foreach (RuleRepositoryDefBase dataelement in source.DataElements)
             {
                 //Enforce import by category if it's specified, else just import
-                if ((cat != null) && (cat.Trim() != ""))
+                if (cat != null)
                 {
                     if (dataelement.AssignedCategories.Contains(cat))
                     {
@@ -433,7 +435,7 @@ namespace InRule.Labs.Toolkit.Shared
                     dest.Vocabulary = new VocabularyDef();
                 }         
                 //Enforce import by category if it's specified, else just import
-                if ((cat != null) && (cat.Trim() != ""))
+                if (cat != null)
                 {
                     if (template.AssignedCategories.Contains(cat))
                     {

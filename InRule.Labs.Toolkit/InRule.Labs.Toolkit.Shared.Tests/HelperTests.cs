@@ -154,7 +154,7 @@ namespace InRule.Labs.Toolkit.Shared.Tests
             EntityDef entity = new EntityDef();
             EntityDef entity2 = new EntityDef();
             entity.Name = "HelloWorld";
-            entity.Name = "HelloWorld";
+            entity2.Name = "HelloWorld";
             source.Entities.Add(entity);
             dest.Entities.Add(entity2);
 
@@ -238,7 +238,7 @@ namespace InRule.Labs.Toolkit.Shared.Tests
             Helper h = new Helper();
             RuleApplicationDef source = RuleApplicationDef.Load(_sourcePath);
             RuleApplicationDef dest = RuleApplicationDef.Load(_destPath);
-            h.ImportRuleApp(source, dest, "Category1", Helper.POLICY_IGNORE_EXISTING);
+            h.ImportRuleApp(source, dest, "Category1");
             RuleApplicationValidationErrorCollection err = dest.Validate();
             string tempPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory.Substring(0, AppDomain.CurrentDomain.BaseDirectory.IndexOf("bin")), @"Ruleapps\", Guid.NewGuid() + "TempRuleApplication.ruleappx");
             dest.SaveToFile(tempPath);
