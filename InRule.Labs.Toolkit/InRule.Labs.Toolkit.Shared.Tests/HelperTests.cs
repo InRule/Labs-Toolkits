@@ -235,10 +235,21 @@ namespace InRule.Labs.Toolkit.Shared.Tests
         [Test]
         public void TestImportDefByCategory()
         {
+
             Helper h = new Helper();
-            RuleApplicationDef source = RuleApplicationDef.Load(_sourcePath);
-            RuleApplicationDef dest = RuleApplicationDef.Load(_destPath);
+            string sourcePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory.Substring(0,
+                AppDomain.CurrentDomain.BaseDirectory.IndexOf("bin")), @"Ruleapps\", "Unit_Test_SourceRuleApplication_Import_By_Category.ruleappx");
+
+            string destPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory.Substring(0,
+                AppDomain.CurrentDomain.BaseDirectory.IndexOf("bin")), @"Ruleapps\", "Unit_Test_DestRuleApplication_Import_By_Category.ruleappx");
+
+            RuleApplicationDef source = RuleApplicationDef.Load(sourcePath);
+            RuleApplicationDef dest = RuleApplicationDef.Load(destPath);
             h.ImportRuleApp(source, dest, "Category1");
+            RuleRepositoryDefBase retval = dest.FindDef("FireNotification1");
+           
+            Assert.NotNull(retval);
+
             RuleApplicationValidationErrorCollection err = dest.Validate();
             string tempPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory.Substring(0, AppDomain.CurrentDomain.BaseDirectory.IndexOf("bin")), @"Ruleapps\", Guid.NewGuid() + "TempRuleApplication.ruleappx");
             dest.SaveToFile(tempPath);

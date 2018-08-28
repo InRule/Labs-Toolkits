@@ -539,16 +539,7 @@ namespace InRule.Labs.Toolkit.Shared
             if (source != null)
             {
                 string key = MakeKey(source);
-                /*
-                foreach (RuleRepositoryDefBase def in source.AsEnumerable())
-                {
-                    ProcessDef(def, list, key);
-                }
-                foreach (RuleRepositoryDefBase def in source.Categories)
-                {
-                    ProcessDef(def,list,key);
-                }
-                */
+               
                 RuleRepositoryDefCollection[] colls = source.GetAllChildCollections();
                 foreach (RuleRepositoryDefCollection coll in colls)
                 {
@@ -567,7 +558,7 @@ namespace InRule.Labs.Toolkit.Shared
             if (_importHash.Contains(child.Name) == false)
             {
                 _importHash = _importHash + child.Name;  //update the hash
-                //Console.WriteLine(child.Name);
+               
                 if (String.IsNullOrEmpty(key) == false)
                 {
                     if (IsSafeTemplateDef(child)) //some vocab definitions are not safe to stamp with an attribute
@@ -667,7 +658,7 @@ namespace InRule.Labs.Toolkit.Shared
                         destParent.ThisRuleSet.Rules.Add(child);
                     }
 
-                   Debug.WriteLine("----Just add it --- " + child.Name + " Parent in dest: " + destParent.Name);
+                   //Debug.WriteLine("----Just add it --- " + child.Name + " Parent in dest: " + destParent.Name);
 
 
                 }
