@@ -246,7 +246,7 @@ namespace InRule.Labs.Toolkit.Shared.Tests
             RuleApplicationDef source = RuleApplicationDef.Load(sourcePath);
             RuleApplicationDef dest = RuleApplicationDef.Load(destPath);
             h.ImportRuleApp(source, dest, "Category1");
-            RuleRepositoryDefBase retval = dest.FindDef("FireNotification1");
+            RuleRepositoryDefBase retval = h.FindDefDeep(dest, "FireNotification1");
            
             Assert.NotNull(retval);
 

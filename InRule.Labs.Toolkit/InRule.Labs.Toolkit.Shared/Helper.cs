@@ -672,15 +672,19 @@ namespace InRule.Labs.Toolkit.Shared
         /// until it's decided that the ProcessChildren and this code can be refactored safely.  This code has the
         /// advantage of not requireing the member variable to hash duplicate hits and remove them from the
         /// collection.
+        /// 
+        /// This will find defs by guid and name.
         /// </summary>
-        public RuleRepositoryDefBase FindDefDeep(RuleApplicationDef ruleapp, string guid)
+        /// 
+        /// TODO: Write more unit tests on this method
+        public RuleRepositoryDefBase FindDefDeep(RuleApplicationDef ruleapp, string find)
         {
             RuleRepositoryDefBase found = null;
-            if( (ruleapp != null) && (String.IsNullOrEmpty(guid) == false))
+            if( (ruleapp != null) && (String.IsNullOrEmpty(find) == false))
             {
                 foreach (RuleRepositoryDefBase def in ruleapp.AsEnumerable())
                 {
-                    if (def.Guid.ToString().Equals(guid))
+                    if (def.Guid.ToString().Equals(find) || (def.Name.Equals(find)))
                     {
                         //Console.WriteLine("Found....");
                         found = def;
@@ -692,7 +696,7 @@ namespace InRule.Labs.Toolkit.Shared
                 {
                     foreach (RuleRepositoryDefBase def in ruleapp.Categories)
                     {
-                        if (def.Guid.ToString().Equals(guid))
+                        if (def.Guid.ToString().Equals(find) || (def.Name.Equals(find)))
                         {
                             //Console.WriteLine("Found....");
                             found = def;
