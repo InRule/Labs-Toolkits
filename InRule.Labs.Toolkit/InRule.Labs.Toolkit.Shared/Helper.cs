@@ -534,6 +534,7 @@ namespace InRule.Labs.Toolkit.Shared
             foreach (Artifact item in list)
             {
                 AddArtifactToCount(item.DefBase, summary);
+
             }
         }
 
