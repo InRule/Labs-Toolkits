@@ -23,10 +23,6 @@ namespace InRule.Labs.Toolkit.Shared.Tests
 
         private string _destPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory.Substring(0,
             AppDomain.CurrentDomain.BaseDirectory.IndexOf("bin")), @"Ruleapps\", "DestRuleApplication.ruleappx");
-        
-        /*private string _destPathBase = Path.Combine(AppDomain.CurrentDomain.BaseDirectory.Substring(0,
-           AppDomain.CurrentDomain.BaseDirectory.IndexOf("bin")), @"Ruleapps\", "DestRuleApplication");
-           */
 
         [Test]
         public void MakeTempPathTest()
@@ -253,9 +249,6 @@ namespace InRule.Labs.Toolkit.Shared.Tests
             RuleApplicationValidationErrorCollection err = dest.Validate();
             string tempPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory.Substring(0, AppDomain.CurrentDomain.BaseDirectory.IndexOf("bin")), @"Ruleapps\", Guid.NewGuid() + "TempRuleApplication.ruleappx");
             dest.SaveToFile(tempPath);
-
-            //TESTS
-            //Assert.NotNull(dest.FindDef("IndependentRuleset1"));
 
         }
 
