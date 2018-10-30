@@ -75,6 +75,7 @@ RuleApplicationDef source = RuleApplicationDef.Load(sourcePath);
 RuleApplicationDef dest = RuleApplicationDef.Load(destPath);
 
 //When category is included, the method attempts a merge
+
 h.ImportRuleApp(source, dest, "Category1");
 
 
