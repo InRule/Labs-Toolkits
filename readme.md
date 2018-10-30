@@ -60,7 +60,22 @@ After each import, the rule application is validated to ensure it's still workin
 
 
 
+# Merge By Category
 
+Sometimes breaking up rule applications into toolkits is not enough to keep everyone working.  You might have several team members pound away at a rule app during the day and they are all in the same Rule Set.  In these cases, you can share a base rule application between them and then tag each rule with a Category.
+
+The Helper now includes methods that import and merge rules (and other artifacts) into a rule application.  After a merge, the rule author in charge of the merge should make sure the rules were placed in expected locations.  There are cases, where rules might be placed somewhere un-expected and the execution order will be effected.
+
+**Specialized Import Using Category**
+
+Helper h = new Helper();
+
+RuleApplicationDef source = RuleApplicationDef.Load(sourcePath);
+
+RuleApplicationDef dest = RuleApplicationDef.Load(destPath);
+
+//When category is included, the method attempts a merge
+h.ImportRuleApp(source, dest, "Category1");
 
 
 
