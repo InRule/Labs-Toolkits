@@ -10,6 +10,8 @@ using InRule.Repository;
 using System.IO;
 using InRule.Labs.Toolkit.Shared.Model;
 using System.Collections.ObjectModel;
+using InRule.Repository.EndPoints;
+using InRule.Repository.SchemaOperations;
 
 namespace InRule.Labs.Toolkit.Shared.Tests
 {
@@ -21,10 +23,6 @@ namespace InRule.Labs.Toolkit.Shared.Tests
 
         private string _destPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory.Substring(0,
             AppDomain.CurrentDomain.BaseDirectory.IndexOf("bin")), @"Ruleapps\", "DestRuleApplication.ruleappx");
-        
-        /*private string _destPathBase = Path.Combine(AppDomain.CurrentDomain.BaseDirectory.Substring(0,
-           AppDomain.CurrentDomain.BaseDirectory.IndexOf("bin")), @"Ruleapps\", "DestRuleApplication");
-           */
 
         [Test]
         public void MakeTempPathTest()
@@ -152,7 +150,7 @@ namespace InRule.Labs.Toolkit.Shared.Tests
             EntityDef entity = new EntityDef();
             EntityDef entity2 = new EntityDef();
             entity.Name = "HelloWorld";
-            entity.Name = "HelloWorld";
+            entity2.Name = "HelloWorld";
             source.Entities.Add(entity);
             dest.Entities.Add(entity2);
 
@@ -230,7 +228,29 @@ namespace InRule.Labs.Toolkit.Shared.Tests
                 Console.WriteLine("\"" + item.ArtifcatType + "\", " + item.Count);
             }
         }
+        [Test]
+        public void TestImportDefByCategory()
+        {
 
+            Helper h = new Helper();
+            string sourcePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory.Substring(0,
+                AppDomain.CurrentDomain.BaseDirectory.IndexOf("bin")), @"Ruleapps\", "Unit_Test_SourceRuleApplication_Import_By_Category.ruleappx");
+
+            string destPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory.Substring(0,
+                AppDomain.CurrentDomain.BaseDirectory.IndexOf("bin")), @"Ruleapps\", "Unit_Test_DestRuleApplication_Import_By_Category.ruleappx");
+
+            RuleApplicationDef source = RuleApplicationDef.Load(sourcePath);
+            RuleApplicationDef dest = RuleApplicationDef.Load(destPath);
+            h.ImportRuleApp(source, dest, "Category1");
+            RuleRepositoryDefBase retval = h.FindDefDeep(dest, "FireNotification1");
+           
+            Assert.NotNull(retval);
+
+            RuleApplicationValidationErrorCollection err = dest.Validate();
+            string tempPath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory.Substring(0, AppDomain.CurrentDomain.BaseDirectory.IndexOf("bin")), @"Ruleapps\", Guid.NewGuid() + "TempRuleApplication.ruleappx");
+            dest.SaveToFile(tempPath);
+
+        }
 
     }
 }

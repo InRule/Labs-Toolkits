@@ -78,22 +78,28 @@ namespace InRule.Labs.Toolkit.Shared
         }
         internal void ValidateImport(RuleApplicationDef dest)
         {
-            if (dest.Validate().Count != 0)
+            var result = dest.Validate();
+            if (result.Count != 0)
             {
                 throw new InvalidImportException("The import you just attempted is not valid.");
             }
         }
+
         /// <summary>
         /// Gerneral import for ruleaps off the filesystem.
         /// </summary>
         public void ImportRuleApp(RuleApplicationDef source, RuleApplicationDef dest)
         {
-            Import(source, dest, false);
+            ImportRuleApp(source, dest, null);
+        }
+        public void ImportRuleApp(RuleApplicationDef source, RuleApplicationDef dest, string category)
+        {
+            Import(source, dest, false, category);
             ValidateImport(dest);
         }
-        public void ImportRuleApp(RuleApplicationDef source, RuleApplicationDef dest, string savePath)
+        public void ImportRuleApp(RuleApplicationDef source, RuleApplicationDef dest, string savePath, string category)
         {
-            ImportRuleApp(source, dest);
+            ImportRuleApp(source, dest, category);
             dest.SaveToFile(savePath);
         }
         public void ImportRuleApp(string sourceRuleappPath, string destRuleappPath)
@@ -101,7 +107,7 @@ namespace InRule.Labs.Toolkit.Shared
             try
             {
                 ImportRuleApp(RuleApplicationDef.Load(sourceRuleappPath),
-                    RuleApplicationDef.Load(destRuleappPath), destRuleappPath);
+                    RuleApplicationDef.Load(destRuleappPath), destRuleappPath, null);
             }
             catch (Exception ex)
             {
@@ -259,51 +265,187 @@ namespace InRule.Labs.Toolkit.Shared
             }
             return resultAtt;
         }
+
         internal void Import(RuleApplicationDef source, RuleApplicationDef dest, bool toolkit)
+        {
+            Import(source,dest,toolkit, null);
+        }
+
+       
+        internal void Import(RuleApplicationDef source, RuleApplicationDef dest, bool toolkit, string cat)
         {
             string key = MakeKey(source);
             if (toolkit == true)
             {
                 GetAll(source);  //stamps source artifacts with an attribute containing a toolkit key
             }
+            //Ensure Category Exists
+            if (cat != null)
+            {
+                if(dest.Categories.Contains(cat) == false)
+                {
+                    dest.Categories.Add(new CategoryDef(cat));
+                }
+            }
+
             //import entities
             foreach (RuleRepositoryDefBase entityDef in source.Entities)
-            {  
-                dest.Entities.Add(entityDef.CopyWithSameGuids());
+            {
+                
+                //Enforce import by category if it's specified, else just import
+                if (cat != null)
+                {
+                    //TODO: Improve this case to see if it can share more with "existing entities case"
+
+                    //if the entity is not in the destination, then we can import just what we need.  Easy.
+                    if (entityDef.AssignedCategories.Contains(cat) &&
+                        (this.FindDefDeep(dest, entityDef.Guid.ToString()) == null))
+                    {
+                        // strip out the rulesets and rules that don't have the category
+                        EntityDef entity = (EntityDef) entityDef;
+                        //RemoveNonCategoryDefs(rulesetDef, cat);
+                        foreach (RuleRepositoryDefBase def in entity.RuleElements.ToList())
+                        {
+                            //RemoveNonCategoryDefs(def, cat);
+                            RemoveNonCategoryDefsFromChildren(def, cat);
+                        }
+
+                        //Clean empty rulesets that don't conform
+                        foreach (RuleRepositoryDefBase def in entity.RuleElements.ToList())
+                        {
+                            if (def.HasChildCollectionChildren == false)
+                            {
+                                entity.RuleElements.Remove(def);
+                            }
+                        }
+
+                        dest.Entities.Add(entityDef.CopyWithSameGuids());
+                    }
+
+
+                    //the entity exists, so we need to be more careful on the merge
+                    else if (entityDef.AssignedCategories.Contains(cat) &&
+                             (this.FindDefDeep(dest, entityDef.Guid.ToString()) != null))
+                    {
+                        EntityDef entity = (EntityDef) entityDef;
+                        //ignore parent policy
+                        
+                            foreach (RuleRepositoryDefBase def in entity.RuleElements.ToList())
+                            {
+                                IgnoreExistingDef(def, cat, dest);
+                            }
+                        
+                    }
+                }
+                //Basic import case
+                else
+                {
+                    {
+                        dest.Entities.Add(entityDef.CopyWithSameGuids());
+                    }
+                }
+               
             }
+
             //import rulesets
             foreach (RuleRepositoryDefBase rulesetDef in source.RuleSets)
             {
-                dest.RuleSets.Add(rulesetDef.CopyWithSameGuids());
+                //Enforce import by category if it's specified, else just import
+                if (cat != null)
+                {
+                    IgnoreExistingDef(rulesetDef, cat, dest);
+                }
+                else
+                {
+                    dest.RuleSets.Add(rulesetDef.CopyWithSameGuids());
+                }
             }
             //import endpoints
             foreach (RuleRepositoryDefBase endpoint in source.EndPoints)
             {
-                dest.EndPoints.Add(endpoint.CopyWithSameGuids());
+
+                //Enforce import by category if it's specified, else just import
+                if (cat != null)
+                {
+                    if (endpoint.AssignedCategories.Contains(cat))
+                    {
+                        dest.EndPoints.Add(endpoint.CopyWithSameGuids());
+                    }
+                }
+                else
+                {
+                    dest.EndPoints.Add(endpoint.CopyWithSameGuids());
+                }
             }
             //import udfs
             foreach (RuleRepositoryDefBase udf in source.UdfLibraries)
             {
-                dest.UdfLibraries.Add(udf.CopyWithSameGuids());
+
+                //Enforce import by category if it's specified, else just import
+                if (cat != null)
+                {
+                    if (udf.AssignedCategories.Contains(cat))
+                    {
+                        dest.UdfLibraries.Add(udf.CopyWithSameGuids());
+                    }
+                }
+                else
+                {
+                    dest.UdfLibraries.Add(udf.CopyWithSameGuids());
+                }
             }
             //import categories
             foreach (RuleRepositoryDefBase category in source.Categories)
             {
-                dest.Categories.Add(category.CopyWithSameGuids());
+
+                //Enforce import by category if it's specified, else just import
+                if (cat != null)
+                {
+                    //do nothing if it's import by cat, we add the required category up front
+                }
+                else
+                {
+                    //import all
+                    dest.Categories.Add(category.CopyWithSameGuids());
+                }
+                
             }
             //data elements
             foreach (RuleRepositoryDefBase dataelement in source.DataElements)
             {
-                dest.DataElements.Add(dataelement.CopyWithSameGuids());
+                //Enforce import by category if it's specified, else just import
+                if (cat != null)
+                {
+                    if (dataelement.AssignedCategories.Contains(cat))
+                    {
+                       dest.DataElements.Add(dataelement.CopyWithSameGuids());
+                    }
+                }
+                else
+                {
+                    dest.DataElements.Add(dataelement.CopyWithSameGuids());
+                }
             }
             //import vocabulary at the ruleapp level
             foreach (RuleRepositoryDefBase template in source.Vocabulary.Templates)
             {
+                
                 if (dest.Vocabulary == null)
                 {
                     dest.Vocabulary = new VocabularyDef();
+                }         
+                //Enforce import by category if it's specified, else just import
+                if (cat != null)
+                {
+                    if (template.AssignedCategories.Contains(cat))
+                    {
+                        dest.Vocabulary.Templates.Add(template.CopyWithSameGuids());
+                    }
                 }
-                dest.Vocabulary.Templates.Add(template.CopyWithSameGuids());
+                else
+                {
+                    dest.Vocabulary.Templates.Add(template.CopyWithSameGuids());
+                }
             }
         }
         internal void Remove(RuleApplicationDef dest, string key)
@@ -397,16 +539,7 @@ namespace InRule.Labs.Toolkit.Shared
             if (source != null)
             {
                 string key = MakeKey(source);
-                /*
-                foreach (RuleRepositoryDefBase def in source.AsEnumerable())
-                {
-                    ProcessDef(def, list, key);
-                }
-                foreach (RuleRepositoryDefBase def in source.Categories)
-                {
-                    ProcessDef(def,list,key);
-                }
-                */
+               
                 RuleRepositoryDefCollection[] colls = source.GetAllChildCollections();
                 foreach (RuleRepositoryDefCollection coll in colls)
                 {
@@ -417,24 +550,7 @@ namespace InRule.Labs.Toolkit.Shared
                 }
             }
         }
-        /// <summary>
-        /// Keep this method around in case we decide to use .AsEnumerable for general looping and processing.
-        /// </summary>
-        /*
-        internal void ProcessDef(RuleRepositoryDefBase def, ObservableCollection<Artifact> list, string key)
-        {
-            if (IsSafeTemplateDef(def)) //some vocab definitions are not safe to stamp with an attribute
-            {
-                StampAttribute(def, key);
-            }
-            if (list != null)
-            {
-                Artifact a = new Artifact();
-                a.DefBase = def;
-                list?.Add(a);
-            }
-        }
-        */
+       
         //TODO: Refactor this member variable for thread safety
         private string _importHash = ""; //prevents duplicate import
         internal void ProcessChildren(RuleRepositoryDefBase child, ObservableCollection<Artifact> list, string key)
@@ -442,7 +558,7 @@ namespace InRule.Labs.Toolkit.Shared
             if (_importHash.Contains(child.Name) == false)
             {
                 _importHash = _importHash + child.Name;  //update the hash
-                //Console.WriteLine(child.Name);
+               
                 if (String.IsNullOrEmpty(key) == false)
                 {
                     if (IsSafeTemplateDef(child)) //some vocab definitions are not safe to stamp with an attribute
@@ -465,22 +581,110 @@ namespace InRule.Labs.Toolkit.Shared
                 }
             }
         }
-        
+
+        /// <summary>
+        /// This enforces the policy of importing only times that are tagged with a category.  It will include parents
+        /// even if they are not tagged with a category.  This expects that parents do not exist in the existing
+        /// Rule Application so it's not a true "merge" capability.
+        /// </summary>
+        internal void RemoveNonCategoryDefsFromChildren(RuleRepositoryDefBase child, string cat)
+        {
+            if (_importHash.Contains(child.Name) == false)
+            {
+                _importHash = _importHash + child.Name;  //update the hash
+               
+                    if ((child.HasChildCollectionChildren == false) && (child.AssignedCategories.Contains(cat) == false))
+                    {
+                        //only remove if it's the lowest node 
+                        child.ThisRuleSet.Rules.Remove(child);
+                    }
+                    else if (child.HasChildCollectionChildren == true)
+                    {
+                        var collquery = from childcollections in child.GetAllChildCollections()
+                            select childcollections;
+                        foreach (RuleRepositoryDefCollection defcollection in collquery)
+                        {
+                            var defquery = from RuleRepositoryDefBase items in defcollection select items;
+                            foreach (var def in defquery.ToList<RuleRepositoryDefBase>())
+                            {
+                                RemoveNonCategoryDefsFromChildren(def, cat);
+                            }
+                        }
+                    }
+              }
+        }
+
+        internal void IgnoreExistingDef(RuleRepositoryDefBase child, string cat, RuleApplicationDef dest)
+        {
+
+            //does this def exist in the destination, keep going deep
+            if ((this.FindDefDeep(dest, child.Guid.ToString()) != null))
+            {
+                if (child.HasChildCollectionChildren == false)
+                {
+                   Debug.WriteLine("The child exists in the ruleapp and has no children -- Do nothing.");
+                }
+                else
+                {
+                   //traverse the children and add only those that don't exist
+                        var collquery = from childcollections in child.GetAllChildCollections()
+                            select childcollections;
+                        foreach (RuleRepositoryDefCollection defcollection in collquery)
+                        {
+                            var defquery = from RuleRepositoryDefBase items in defcollection select items;
+                            foreach (var def in defquery.ToList<RuleRepositoryDefBase>())
+                            {
+                                IgnoreExistingDef(def, cat, dest);
+                            }
+                        }
+                    
+                }
+
+            }
+            else 
+            {
+                if (child.AssignedCategories.Contains(cat))
+                {
+                    RuleRepositoryDefBase destParent = this.FindDefDeep(dest, child.Parent.Guid.ToString());
+                    RuleRepositoryDefBase copy = child.CopyWithSameGuids();
+                    child.SetParent(null);
+                    if (destParent.AuthoringElementTypeName != "Rule Set")
+                    {
+                        SimpleRuleDef simpleParent = (SimpleRuleDef) destParent;
+                        simpleParent.SubRules.Add(child);
+                    }
+                    else
+                    {
+                        destParent.ThisRuleSet.Rules.Add(child);
+                    }
+
+                   //Debug.WriteLine("----Just add it --- " + child.Name + " Parent in dest: " + destParent.Name);
+
+
+                }
+               
+            }
+        }
+
         /// <summary>
         /// Deep search of a ruleapp for a specific def.  This code may not be suitable for proper looping and stamping
         /// of defs because the AsEnumerable misses some artifacts.  This will remain standalone for specific artifacts
         /// until it's decided that the ProcessChildren and this code can be refactored safely.  This code has the
         /// advantage of not requireing the member variable to hash duplicate hits and remove them from the
         /// collection.
+        /// 
+        /// This will find defs by guid and name.
         /// </summary>
-        public RuleRepositoryDefBase FindDefDeep(RuleApplicationDef ruleapp, string guid)
+        /// 
+        /// TODO: Write more unit tests on this method
+        public RuleRepositoryDefBase FindDefDeep(RuleApplicationDef ruleapp, string find)
         {
             RuleRepositoryDefBase found = null;
-            if( (ruleapp != null) && (String.IsNullOrEmpty(guid) == false))
+            if( (ruleapp != null) && (String.IsNullOrEmpty(find) == false))
             {
                 foreach (RuleRepositoryDefBase def in ruleapp.AsEnumerable())
                 {
-                    if (def.Guid.ToString().Equals(guid))
+                    if (def.Guid.ToString().Equals(find) || (def.Name.Equals(find)))
                     {
                         //Console.WriteLine("Found....");
                         found = def;
@@ -492,7 +696,7 @@ namespace InRule.Labs.Toolkit.Shared
                 {
                     foreach (RuleRepositoryDefBase def in ruleapp.Categories)
                     {
-                        if (def.Guid.ToString().Equals(guid))
+                        if (def.Guid.ToString().Equals(find) || (def.Name.Equals(find)))
                         {
                             //Console.WriteLine("Found....");
                             found = def;
